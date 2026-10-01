@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obturador Lull — Rueda Fotográfica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg:#080808; --fg:#ddd; --muted:#555; --accent:#fff;
+            --card:#0e0e0e; --border:#1e1e1e;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Space Mono',monospace;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden;}
+
+        /* Atmósfera */
+        .vignette{position:fixed;inset:0;pointer-events:none;z-index:900;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,0.8)100%);}
+        .vf-grid{position:fixed;inset:0;pointer-events:none;z-index:899;
+            background:linear-gradient(to right,transparent 33.2%,rgba(255,255,255,0.02) 33.2%,rgba(255,255,255,0.02) 33.5%,transparent 33.5%),
+            linear-gradient(to right,transparent 66.5%,rgba(255,255,255,0.02) 66.5%,rgba(255,255,255,0.02) 66.8%,transparent 66.8%),
+            linear-gradient(to bottom,transparent 33.2%,rgba(255,255,255,0.02) 33.2%,rgba(255,255,255,0.02) 33.5%,transparent 33.5%),
+            linear-gradient(to bottom,transparent 66.5%,rgba(255,255,255,0.02) 66.5%,rgba(255,255,255,0.02) 66.8%,transparent 66.8%);}
+        .grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;z-index:901;filter:url(#gf);opacity:.03;animation:gs .4s steps(4) infinite;}
+        @keyframes gs{0%{transform:translate(0,0)}25%{transform:translate(-2%,3%)}50%{transform:translate(3%,-1%)}75%{transform:translate(-1%,-3%)}100%{transform:translate(2%,1%)}}
+
+        /* Flash */
+        .flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:950;transition:opacity .04s ease;}
+        .flash.fire{opacity:.6;}
+
+        /* HUD */
+        .hud{position:fixed;z-index:898;pointer-events:none;font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.18);}
+        .hud-tl{top:14px;left:18px;} .hud-tr{top:14px;right:18px;text-align:right;}
+        .hud-bl{bottom:14px;left:18px;} .hud-br{bottom:14px;right:18px;text-align:right;}
+        .rec-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);margin-right:5px;vertical-align:middle;animation:bk 1.5s ease-in-out infinite;}
+        @keyframes bk{0%,100%{opacity:.2}50%{opacity:.7}}
+
+        /* Layout principal */
+        .main-layout{display:flex;gap:24px;align-items:flex-start;justify-content:center;max-width:1100px;margin:0 auto;padding:20px 16px;}
+        .levers-panel{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;}
+        .wheel-section{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;}
+
+        /* Wheel */
+        .wheel-wrapper{width:min(560px,78vw);height:min(560px,78vw);position:relative;transition:filter .2s ease;}
+        .wheel-wrapper.dim{filter:brightness(.25);}
+        .wheel-wrapper canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 2px var(--border),0 0 80px rgba(0,0,0,.6);}
+
+        /* Indicator */
+        .indicator{position:absolute;top:-2px;left:50%;transform:translateX(-50%);z-index:20;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:20px solid var(--accent);filter:drop-shadow(0 2px 8px rgba(0,0,0,.7));}
+
+        /* Lever buttons (desktop) */
+        .lever-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .2s ease;position:relative;overflow:hidden;text-align:left;font-family:inherit;color:var(--fg);outline:none;width:100%;}
+        .lever-btn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:#333;transition:background .2s,width .2s;}
+        .lever-btn:hover::before,.lever-btn.spinning::before{background:var(--accent);width:3px;}
+        .lever-btn:hover{background:#141414;border-color:#2a2a2a;}
+        .lever-btn.spinning{background:#151515;border-color:#3a3a3a;}
+        .lever-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+        .lever-num{width:22px;height:22px;border-radius:50%;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-size:9px;color:#666;flex-shrink:0;transition:all .2s;}
+        .lever-btn.spinning .lever-num{border-color:var(--accent);color:var(--accent);}
+        .lever-info{flex:1;min-width:0;}
+        .lever-label{font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555;display:block;transition:color .2s;}
+        .lever-btn.spinning .lever-label{color:#999;}
+        .lever-value{font-size:9.5px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;margin-top:2px;transition:color .2s;max-width:130px;}
+        .lever-btn.spinning .lever-value{color:var(--accent);}
+        .lever-arrow{font-size:10px;color:#333;transition:transform .4s cubic-bezier(.34,1.5,.64,1),color .2s;flex-shrink:0;}
+        .lever-btn.spinning .lever-arrow{transform:rotate(180deg);color:var(--accent);}
+
+        /* Shutter */
+        .shutter-btn{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#4a4a4a,#1a1a1a 70%);border:3px solid #333;position:relative;cursor:pointer;transition:transform .1s,box-shadow .15s;box-shadow:0 4px 20px rgba(0,0,0,.6),inset 0 1px 2px rgba(255,255,255,.08);outline:none;-webkit-tap-highlight-color:transparent;margin-top:20px;}
+        .shutter-btn::before{content:'';position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle at 42% 38%,#3a3a3a,#0e0e0e 75%);border:2px solid #2a2a2a;transition:background .1s;}
+        .shutter-btn::after{content:'';position:absolute;inset:12px;border-radius:50%;border:1px solid #222;}
+        .shutter-btn:active:not(:disabled){transform:scale(.9);box-shadow:0 1px 6px rgba(0,0,0,.5);}
+        .shutter-btn:active:not(:disabled)::before{background:radial-gradient(circle at 42% 38%,#2a2a2a,#080808 75%);}
+        .shutter-btn:disabled{opacity:.3;cursor:not-allowed;}
+        .shutter-btn.ready{animation:sp 2.5s ease-in-out infinite;}
+        @keyframes sp{0%,100%{box-shadow:0 4px 20px rgba(0,0,0,.6),inset 0 1px 2px rgba(255,255,255,.08),0 0 0 0 rgba(255,255,255,.06)}50%{box-shadow:0 4px 20px rgba(0,0,0,.6),inset 0 1px 2px rgba(255,255,255,.08),0 0 0 10px rgba(255,255,255,0)}}
+        .shutter-btn:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}
+
+        /* Mobile levers */
+        .mobile-levers{display:none;grid-template-columns:repeat(3,1fr);gap:4px;max-width:400px;margin:16px auto 0;}
+        .lever-compact{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;background:var(--card);border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .2s;gap:3px;min-height:56px;font-family:inherit;color:var(--fg);outline:none;}
+        .lever-compact .lc-num{font-size:8px;color:#555;transition:color .2s;}
+        .lever-compact .lc-label{font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#888;text-align:center;line-height:1.3;transition:color .2s;}
+        .lever-compact.spinning{border-color:var(--accent);background:#151515;}
+        .lever-compact.spinning .lc-num,.lever-compact.spinning .lc-label{color:var(--accent);}
+        .lever-compact:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+        /* Result panel */
+        .result-section{max-width:760px;margin:28px auto 0;padding:0 16px;}
+        .result-header{display:flex;align-items:baseline;gap:16px;margin-bottom:12px;}
+        .result-header h2{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+        .result-header .line{flex:1;height:1px;background:var(--border);}
+        .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+        .result-cell{background:var(--card);padding:14px 12px;transition:background .4s ease;position:relative;overflow:hidden;}
+        .result-cell .label{font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#444;margin-bottom:6px;}
+        .result-cell .value{font-size:11px;line-height:1.5;color:#999;transition:color .3s;}
+        .result-cell.updated .value{color:var(--accent);}
+        .result-cell.updated{background:#141414;}
+        .result-cell .ring-id{position:absolute;top:8px;right:10px;font-size:8px;color:#2a2a2a;font-weight:700;}
+
+        /* Tooltip */
+        .tip{font-size:9px;color:#444;text-align:center;margin-top:8px;letter-spacing:1px;}
+
+        /* Responsive */
+        @media(max-width:820px){
+            .main-layout{flex-direction:column;align-items:center;}
+            .levers-panel{display:none;width:100%;}
+            .mobile-levers{display:grid;}
+            .result-grid{grid-template-columns:repeat(2,1fr);}
+            .result-cell:last-child{grid-column:span 2;}
+            .wheel-wrapper{width:min(420px,85vw);height:min(420px,85vw);}
+        }
+        @media(max-width:400px){
+            .result-grid{grid-template-columns:1fr;}
+            .result-cell:last-child{grid-column:span 1;}
+            .wheel-wrapper{width:min(340px,90vw);height:min(340px,90vw);}
+        }
+
+        /* Reducir movimiento */
+        @media(prefers-reduced-motion:reduce){
+            .grain,.shutter-btn.ready,.rec-dot{animation:none!important;}
+            .lever-arrow,.lever-btn::before,.result-cell{transition:none!important;}
+        }
+
+        ::-webkit-scrollbar{width:3px;}
+        ::-webkit-scrollbar-track{background:var(--bg);}
+        ::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
+    </style>
+</head>
+<body>
+
+<!-- Filtros SVG -->
+<svg style="position:absolute;width:0;height:0;"><filter id="gf"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></svg>
+
+<!-- Atmósfera -->
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="vf-grid" aria-hidden="true"></div>
+<div id="flash" class="flash" aria-hidden="true"></div>
+
+<!-- HUD -->
+<div class="hud hud-tl" aria-hidden="true"><div><span class="rec-dot"></span>REC</div><div style="margin-top:3px" id="hudIso">ISO 400</div></div>
+<div class="hud hud-tr" aria-hidden="true"><div id="hudAp">f/2.8</div><div style="margin-top:3px" id="hudFl">35mm</div></div>
+<div class="hud hud-bl" aria-hidden="true"><div id="hudSp">1/125s</div></div>
+<div class="hud hud-br" aria-hidden="true"><div id="hudFr">FRAME 001</div></div>
+
+<main class="relative z-10 pt-6 pb-20">
+    <!-- Encabezado -->
+    <header class="text-center mb-6 px-4">
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight" style="font-family:'Playfair Display',serif;color:var(--accent);">OBTURADOR LULL</h1>
+        <p class="mt-1 text-xs tracking-[4px] uppercase" style="color:var(--muted);">9 anillos — 20 opciones — combinaciones infinitas</p>
+        <div class="mt-2 mx-auto" style="width:50px;height:1px;background:var(--border);"></div>
+    </header>
+
+    <!-- Layout -->
+    <div class="main-layout">
+        <!-- Palancas (desktop) -->
+        <aside class="levers-panel" id="leversPanel" aria-label="Palancas de control de anillos"></aside>
+
+        <!-- Rueda -->
+        <div class="wheel-section">
+            <div class="wheel-wrapper" id="wheelWrap">
+                <div class="indicator" aria-hidden="true"></div>
+                <canvas id="wc"></canvas>
+            </div>
+            <button id="shutterBtn" class="shutter-btn ready" aria-label="Disparar todos los anillos"></button>
+            <p class="tip">Espacio: disparar todo &nbsp;|&nbsp; 1-9: anillo individual</p>
+        </div>
+    </div>
+
+    <!-- Palancas (móvil) -->
+    <div class="mobile-levers" id="mobileLevers" aria-label="Controles de anillos"></div>
+
+    <!-- Resultado -->
+    <section class="result-section" aria-live="polite">
+        <div class="result-header">
+            <h2>Composición activa</h2>
+            <div class="line"></div>
+        </div>
+        <div class="result-grid" id="resultGrid"></div>
+    </section>
+</main>
+
+<script>
+/* ================================================================
+   DATOS
+   ================================================================ */
+const D = [
+    {l:"Desierto de sal — horizonte blanco, líneas minimalistas",e:"Barroco — exceso, dramatismo, ornamentación",p:"Figura en contrapposto — peso en una pierna",v:"Cenital absoluto — vertical, geométrico",z:"Luz dura lateral — sombras marcadas",t:"Larga exposición — movimiento suave",tp:"Amanecer — inicio, claridad suave",es:"Invierno — frío, silencio",a:"Atmósfera etérea — vapor, suavidad"},
+    {l:"Bosque victoriano — niebla, árboles altos",e:"Renacimiento — proporción, equilibrio",p:"Figura arrodillada — manos sobre muslos",v:"Nadir — desde abajo extremo",z:"Contraluz total — siluetas",t:"Profundidad de campo mínima — fondo derretido",tp:"Mediodía — luz alta",es:"Verano — calor, brillo",a:"Atmósfera densa — humedad, peso visual"},
+    {l:"Ruinas industriales — metal oxidado, geometría dura",e:"Futurismo retro — neón, cromo",p:"Figura mirando sobre el hombro — tensión suave",v:"Picado suave — superior, elegante",z:"Luz difusa — suave, uniforme",t:"Tilt-shift — miniaturización",tp:"Tarde dorada — tonos cálidos",es:"Otoño — hojas, melancolía",a:"Atmósfera nebulosa — niebla suave"},
+    {l:"Palacio abandonado — columnas, polvo dorado",e:"Edad de hielo estilizada — fríos extremos",p:"Figura con manos en los bolsillos — relajada",v:"Contrapicado dramático — monumental",z:"Luz cenital — vertical, teatral",t:"Motion blur controlado — energía",tp:"Atardecer — dramatismo",es:"Primavera — flores, frescura",a:"Atmósfera surreal — lógica onírica"},
+    {l:"Acantilado marino — viento, verticalidad",e:"Años 20 — art-déco, glamour",p:"Figura caminando hacia cámara — elegante",v:"Plano holandés — diagonal, tensión",z:"Luz de ventana — natural, suave",t:"High key — blanco dominante",tp:"Crepúsculo — transición",es:"Estación lluviosa — gotas, reflejos",a:"Atmósfera cinematográfica — contraste narrativo"},
+    {l:"Templo egipcio — simetría monumental",e:"Años 70 — psicodelia, texturas",p:"Figura con brazos cruzados — firmeza",v:"POV desde el suelo — baja altura",z:"Luz dorada — atardecer",t:"Low key — sombras profundas",tp:"Noche cerrada — sombras",es:"Estación seca — polvo, claridad",a:"Atmósfera minimalista — limpieza visual"},
+    {l:"Estación de tren antigua — hierro, vapor",e:"Años 50 — cine clásico",p:"Figura mirando al suelo — introspección",v:"POV desde la mano — íntimo",z:"Luz azul fría — nocturna",t:"Bokeh extremo — puntos de luz",tp:"Medianoche — silencio profundo",es:"Monzón — intensidad",a:"Atmósfera tormentosa — energía"},
+    {l:"Invernadero victoriano — vidrio, humedad",e:"Medieval — austeridad",p:"Figura con manos detrás — vulnerabilidad",v:"POV subjetivo — como la mirada",z:"Luz de neón — colores saturados",t:"Fotografía infrarroja — surreal",tp:"Hora azul — tonos fríos",es:"Nevada — blanco absoluto",a:"Atmósfera espectral — misterio"},
+    {l:"Carretera infinita — líneas de fuga",e:"Cyberpunk — neón, lluvia",p:"Figura inclinada hacia adelante — tensión",v:"POV desde detrás del modelo — narrativa",z:"Luz de vela — cálida, íntima",t:"Fotografía analógica — grano orgánico",tp:"Hora dorada — suavidad cálida",es:"Deshielo — transición",a:"Atmósfera vaporosa — halos"},
+    {l:"Biblioteca monumental — columnas, silencio",e:"Romanticismo — emoción, drama",p:"Figura con manos al rostro — vulnerabilidad",v:"Plano detalle extremo — micro",z:"Luz rebotada — suave",t:"Macro artística — texturas",tp:"Pre-amanecer — penumbra",es:"Temporada de viento — movimiento",a:"Atmósfera melancólica — emoción suave"},
+    {l:"Callejón japonés — luces cálidas",e:"Minimalismo 90s — líneas limpias",p:"Figura sentada en el suelo — calma",v:"Plano medio clásico — equilibrio",z:"Luz de tormenta — dramática",t:"Fotografía estenopeica — primitiva",tp:"Post-atardecer — azul profundo",es:"Temporada de flores — color",a:"Atmósfera opresiva — tensión"},
+    {l:"Playa rocosa — textura, viento",e:"Gótico — sombras, dramatismo",p:"Figura con torso girado — tensión dinámica",v:"Plano americano — moda",z:"Luz especular — brillo",t:"Doble exposición — capas",tp:"Hora plateada — luz lunar",es:"Temporada árida — sequedad",a:"Atmósfera ritual — solemnidad"},
+    {l:"Teatro vacío — cortinas, madera",e:"Expresionismo — emoción cruda",p:"Figura con brazos extendidos — apertura",v:"Plano secuencia estático — narrativo",z:"Luz volumétrica — rayos visibles",t:"Larga distancia — compresión",tp:"Hora púrpura — tonos místicos",es:"Temporada húmeda — brillos",a:"Atmósfera onírica — sueño"},
+    {l:"Azotea urbana — skyline, viento",e:"Surrealismo — lógica onírica",p:"Figura apoyada en pared — actitud",v:"POV desde reflejo — espejos",z:"Luz de estudio 3 puntos — clásico",t:"Experimental con prismas — refracciones",tp:"Hora gris — nubes",es:"Temporada cálida — expansión",a:"Atmósfera fría — distancia emocional"},
+    {l:"Museo contemporáneo — geometría blanca",e:"Años 2000 Y2K — brillo, plástico",p:"Figura con manos en cintura — poder",v:"POV desde sombra — conceptual",z:"Luz de linterna — foco duro",t:"Filtros ND — control de luz",tp:"Hora negra — oscuridad total",es:"Temporada fría — contracción",a:"Atmósfera cálida — cercanía"},
+    {l:"Cementerio antiguo — mármol, silencio",e:"Prehistoria estilizada — pieles, tierra",p:"Figura mirando al horizonte — épica",v:"POV desde altura humana — natural",z:"Luz de pantalla — fría",t:"Fotografía de textura — detalle",tp:"Hora metálica — brillo duro",es:"Temporada de tormentas — dramatismo",a:"Atmósfera eléctrica — vibración"},
+    {l:"Catedral vacía — luz cenital",e:"Años 40 — cine noir",p:"Figura con manos en el pecho — contenida",v:"POV desde dron — panorámico",z:"Luz de farola — urbana",t:"Fotografía minimalista — limpieza",tp:"Hora difusa — luz suave",es:"Temporada de niebla — misterio",a:"Atmósfera íntima — cercanía emocional"},
+    {l:"Cueva iluminada — textura orgánica",e:"Años 80 — exceso, color",p:"Figura saltando — energía",v:"POV diagonal ascendente — dinamismo",z:"Luz de fuego — cálida",t:"Fotografía conceptual — idea dominante",tp:"Hora cristalina — nitidez",es:"Calor extremo — distorsión",a:"Atmósfera distorsionada — refracción"},
+    {l:"Jardín geométrico — simetría",e:"Victoriano — romanticismo oscuro",p:"Figura con manos en la espalda — tensión",v:"POV desde marco arquitectónico — encuadre",z:"Luz polarizada — control de reflejos",t:"Sombras duras — contraste",tp:"Hora difractada — prismas",es:"Bruma marina — humedad salina",a:"Atmósfera abstracta — formas"},
+    {l:"Sala de espejos — reflejos infinitos",e:"Posthumanismo — híbridos, futuro",p:"Figura en equilibrio sobre un pie — delicadeza",v:"POV desde detrás de un objeto — ocultamiento",z:"Luz de amanecer — suave",t:"Color selectivo — énfasis cromático",tp:"Hora silenciosa — calma total",es:"Hojas secas — textura",a:"Atmósfera poética — sensibilidad narrativa"}
+];
+
+/* Categorías: clave en datos, etiqueta corta, etiqueta larga */
+const CATS = [
+    {k:"l", s:"Lugares",       lg:"Lugares para fotografía"},
+    {k:"e", s:"Épocas",        lg:"Épocas / Estilos temporales"},
+    {k:"p", s:"Poses",         lg:"Modelos + Poses"},
+    {k:"v", s:"POV",           lg:"Puntos de vista"},
+    {k:"z", s:"Luz",           lg:"Iluminaciones"},
+    {k:"t", s:"Técnica",       lg:"Técnicas fotográficas"},
+    {k:"tp",s:"Hora",          lg:"Temporalidad"},
+    {k:"es",s:"Estación",      lg:"Estacionalidad"},
+    {k:"a", s:"Atmósfera",     lg:"Atmósfera"}
+];
+
+/* ================================================================
+   ESTADO DE LOS 9 ANILLOS
+   ================================================================ */
+const N = 20; // segmentos por anillo
+const SEG = (2*Math.PI)/N;
+
+const rings = CATS.map((cat,i) => {
+    // Rotación inicial aleatoria alineada a segmento
+    const initIdx = Math.floor(Math.random()*N);
+    return {
+        ...cat,
+        idx: i,
+        rotation: -initIdx * SEG, // negativo para que el índice quede arriba
+        spinning: false,
+        spinStart: 0,
+        spinDur: 0,
+        spinFrom: 0,
+        spinTotal: 0,
+        currentIdx: initIdx,
+        items: D.map(d => d[cat.k]),
+        innerR: 0,
+        outerR: 0
+    };
+});
+
+let hoveredRing = -1;
+let animRunning = false;
+let frameCount = 1;
+
+/* ================================================================
+   DOM
+   ================================================================ */
+const canvas = document.getElementById("wc");
+const ctx = canvas.getContext("2d");
+const wheelWrap = document.getElementById("wheelWrap");
+const shutterBtn = document.getElementById("shutterBtn");
+const flashEl = document.getElementById("flash");
+const leversPanel = document.getElementById("leversPanel");
+const mobileLevers = document.getElementById("mobileLevers");
+const resultGrid = document.getElementById("resultGrid");
+
+/* ================================================================
+   GEOMETRÍA DEL CANVAS
+   ================================================================ */
+let CX, CY, MAX_R, RING_W, CENTER_R;
+
+function calcGeometry() {
+    const size = wheelWrap.offsetWidth;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.width = size+"px";
+    canvas.style.height = size+"px";
+    canvas.width = size*dpr;
+    canvas.height = size*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    CX = size/2;
+    CY = size/2;
+    const margin = 10;
+    CENTER_R = Math.max(14, size*0.04);
+    MAX_R = CX - margin;
+    const gap = 1.2;
+    RING_W = (MAX_R - CENTER_R - gap*(rings.length-1)) / rings.length;
+
+    rings.forEach((r,i) => {
+        r.outerR = MAX_R - i*(RING_W+gap);
+        r.innerR = r.outerR - RING_W;
+    });
+}
+
+/* ================================================================
+   DIBUJO
+   ================================================================ */
+function truncText(text, maxW) {
+    if(ctx.measureText(text).width <= maxW) return text;
+    let t = text;
+    while(t.length > 2 && ctx.measureText(t+"…").width > maxW) t=t.slice(0,-1);
+    return t+"…";
+}
+
+function drawWheel() {
+    const w = parseFloat(canvas.style.width);
+    ctx.clearRect(0,0,w,w);
+
+    // Marcas del dial exterior
+    for(let i=0;i<80;i++){
+        const a=(i/80)*Math.PI*2;
+        const major=i%4===0;
+        const r1=MAX_R+1;
+        const r2=MAX_R+(major?5:2.5);
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*r1, CY+Math.sin(a)*r1);
+        ctx.lineTo(CX+Math.cos(a)*r2, CY+Math.sin(a)*r2);
+        ctx.strokeStyle = major?"#444":"#222";
+        ctx.lineWidth = major?1:.5;
+        ctx.stroke();
+    }
+
+    // Dibujar anillos de fuera a dentro
+    for(let ri=0; ri<rings.length; ri++) drawRing(ri);
+
+    // Centro
+    ctx.beginPath();
+    ctx.arc(CX,CY,CENTER_R,0,Math.PI*2);
+    ctx.fillStyle="#080808";
+    ctx.fill();
+    ctx.strokeStyle="#333";
+    ctx.lineWidth=.8;
+    ctx.stroke();
+
+    // Cruz central
+    const cs = CENTER_R*.6;
+    ctx.beginPath();
+    ctx.moveTo(CX-cs,CY); ctx.lineTo(CX+cs,CY);
+    ctx.moveTo(CX,CY-cs); ctx.lineTo(CX,CY+cs);
+    ctx.strokeStyle="#444";
+    ctx.lineWidth=.5;
+    ctx.stroke();
+
+    // Punto central
+    ctx.beginPath();
+    ctx.arc(CX,CY,1.5,0,Math.PI*2);
+    ctx.fillStyle="#666";
+    ctx.fill();
+
+    // Línea indicadora (12 en punto)
+    ctx.beginPath();
+    ctx.moveTo(CX, CY-CENTER_R);
+    ctx.lineTo(CX, CY-MAX_R-6);
+    ctx.strokeStyle="rgba(255,255,255,0.1)";
+    ctx.lineWidth=1;
+    ctx.setLineDash([3,3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function drawRing(ri) {
+    const ring = rings[ri];
+    const showText = RING_W > 22 && ri < 5; // solo anillos externos anchos
+
+    for(let i=0;i<N;i++){
+        const sa = ring.rotation + i*SEG - Math.PI/2;
+        const ea = sa + SEG;
+        const even = i%2===0;
+
+        // Segmento
+        ctx.beginPath();
+        ctx.arc(CX,CY,ring.outerR,sa,ea);
+        ctx.arc(CX,CY,ring.innerR,ea,sa,true);
+        ctx.closePath();
+        ctx.fillStyle = even ? "#111111" : "#d5d5d5";
+        ctx.fill();
+
+        // Borde del segmento
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(sa)*ring.innerR, CY+Math.sin(sa)*ring.innerR);
+        ctx.lineTo(CX+Math.cos(sa)*ring.outerR, CY+Math.sin(sa)*ring.outerR);
+        ctx.strokeStyle="#2a2a2a";
+        ctx.lineWidth=.3;
+        ctx.stroke();
+
+        const midA = sa + SEG/2;
+
+        // Texto abreviado (anillos externos)
+        if(showText){
+            ctx.save();
+            ctx.translate(CX,CY);
+            ctx.rotate(midA);
+            ctx.textAlign="right";
+            ctx.textBaseline="middle";
+            ctx.font="bold 7px 'Space Mono',monospace";
+            ctx.fillStyle = even?"#bbb":"#111";
+            const maxTW = RING_W - 16;
+            const txt = truncText(ring.items[i], maxTW);
+            ctx.fillText(txt, ring.outerR-4, 0);
+            ctx.restore();
+        }
+
+        // Número
+        ctx.save();
+        ctx.translate(CX,CY);
+        ctx.rotate(midA);
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+        const numSize = showText ? 5.5 : Math.max(4.5, RING_W*0.22);
+        ctx.font = `bold ${numSize}px 'Space Mono',monospace`;
+        ctx.fillStyle = even?"rgba(255,255,255,0.3)":"rgba(0,0,0,0.25)";
+        const numR = showText ? ring.innerR + 7 : (ring.innerR+ring.outerR)/2;
+        ctx.fillText(String(i+1).padStart(2,"0"), numR, 0);
+        ctx.restore();
+    }
+
+    // Borde exterior del anillo
+    ctx.beginPath();
+    ctx.arc(CX,CY,ring.outerR,0,Math.PI*2);
+    ctx.strokeStyle="#2a2a2a";
+    ctx.lineWidth=.5;
+    ctx.stroke();
+
+    // Highlight al hacer hover en la palanca
+    if(ri === hoveredRing && !ring.spinning){
+        ctx.beginPath();
+        ctx.arc(CX,CY,ring.outerR+.5,0,Math.PI*2);
+        ctx.strokeStyle="rgba(255,255,255,0.25)";
+        ctx.lineWidth=1.5;
+        ctx.stroke();
+    }
+}
+
+/* ================================================================
+   ANIMACIÓN
+   ================================================================ */
+function getWinIdx(rotation) {
+    let norm = ((-rotation) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+    return Math.floor(norm/SEG) % N;
+}
+
+function startRingSpin(ri, isMaster) {
+    const ring = rings[ri];
+    if(ring.spinning) return;
+    ring.spinning = true;
+    ring.spinFrom = ring.rotation;
+    const extra = (isMaster ? 4 : 3) + Math.random()*3;
+    ring.spinTotal = extra * Math.PI * 2;
+    ring.spinDur = (isMaster ? 3200 : 2400) + Math.random()*1000;
+    ring.spinStart = performance.now();
+
+    // Actualizar UI de palanca
+    setLeverSpinning(ri, true);
+    if(!animRunning) { animRunning=true; requestAnimationFrame(animTick); }
+}
+
+function animTick(now) {
+    let anyMoving = false;
+
+    rings.forEach(ring => {
+        if(!ring.spinning) return;
+        anyMoving = true;
+        const elapsed = now - ring.spinStart;
+        const p = Math.min(elapsed/ring.spinDur, 1);
+        // Ease-out con ligero rebote final
+        const eased = p < 1 ? 1 - Math.pow(1-p, 4) : 1;
+        ring.rotation = ring.spinFrom + ring.spinTotal * eased;
+
+        if(p >= 1){
+            ring.spinning = false;
+            ring.currentIdx = getWinIdx(ring.rotation);
+            setLeverSpinning(ring.idx, false);
+            updateLeverValue(ring.idx);
+            flashResultCell(ring.idx);
+            playClick(false);
+        }
+    });
+
+    drawWheel();
+
+    if(anyMoving){
+        requestAnimationFrame(animTick);
+    } else {
+        animRunning = false;
+        shutterBtn.disabled = false;
+        shutterBtn.classList.add("ready");
+        frameCount++;
+        document.getElementById("hudFr").textContent = "FRAME "+String(frameCount).padStart(3,"0");
+    }
+}
+
+/* ================================================================
+   ACCIONES
+   ================================================================ */
+function spinSingle(ri) {
+    if(rings[ri].spinning) return;
+    playClick(true);
+    startRingSpin(ri, false);
+}
+
+function spinAll() {
+    if(rings.some(r=>r.spinning)) return;
+    shutterBtn.disabled = true;
+    shutterBtn.classList.remove("ready");
+    playClick(true);
+    triggerFlash();
+    wheelWrap.classList.add("dim");
+
+    // Iniciar giros escalonados
+    rings.forEach((r,i) => {
+        setTimeout(() => startRingSpin(i, true), i*70);
+    });
+
+    // Revelar rueda
+    setTimeout(() => wheelWrap.classList.remove("dim"), 280);
+
+    // Si nada está girando (no debería pasar), reactivar
+    setTimeout(() => {
+        if(!animRunning){ shutterBtn.disabled=false; shutterBtn.classList.add("ready"); }
+    }, 500);
+}
+
+/* ================================================================
+   SONIDO (Web Audio API)
+   ================================================================ */
+function playClick(loud) {
+    try {
+        const ac = new (window.AudioContext||window.webkitAudioContext)();
+        const dur = loud ? .07 : .04;
+        const buf = ac.createBuffer(1, Math.floor(ac.sampleRate*dur), ac.sampleRate);
+        const d = buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*(loud?.06:.04)));
+        const src = ac.createBufferSource();
+        src.buffer = buf;
+        const bp = ac.createBiquadFilter();
+        bp.type="bandpass"; bp.frequency.value=4000; bp.Q.value=1;
+        const g = ac.createGain();
+        g.gain.value = loud?.3:.15;
+        src.connect(bp); bp.connect(g); g.connect(ac.destination);
+        src.start();
+        if(loud) setTimeout(()=>{
+            const s2=ac.createBufferSource(); s2.buffer=buf;
+            const g2=ac.createGain(); g2.gain.value=.15;
+            s2.connect(bp); bp.connect(g2); g2.connect(ac.destination); s2.start();
+        },60);
+    } catch(e){}
+}
+
+function triggerFlash() {
+    flashEl.classList.add("fire");
+    setTimeout(()=>flashEl.classList.remove("fire"),50);
+}
+
+/* ================================================================
+   CONSTRUIR PALANCAS
+   ================================================================ */
+function buildLevers() {
+    rings.forEach((ring, i) => {
+        const num = String(i+1).padStart(2,"0");
+
+        // Desktop
+        const btn = document.createElement("button");
+        btn.className = "lever-btn";
+        btn.dataset.ri = i;
+        btn.setAttribute("aria-label", `Girar anillo ${num} ${ring.s}`);
+        btn.innerHTML = `
+            <span class="lever-num">${num}</span>
+            <span class="lever-info">
+                <span class="lever-label">${ring.s}</span>
+                <span class="lever-value" id="lv${i}">${ring.items[ring.currentIdx]}</span>
+            </span>
+            <i class="fa-solid fa-chevron-right lever-arrow"></i>
+        `;
+        btn.addEventListener("click", () => spinSingle(i));
+        btn.addEventListener("mouseenter", () => { hoveredRing=i; if(!animRunning) drawWheel(); });
+        btn.addEventListener("mouseleave", () => { hoveredRing=-1; if(!animRunning) drawWheel(); });
+        leversPanel.appendChild(btn);
+
+        // Móvil
+        const mc = document.createElement("button");
+        mc.className = "lever-compact";
+        mc.dataset.ri = i;
+        mc.setAttribute("aria-label", `Girar anillo ${num} ${ring.s}`);
+        mc.innerHTML = `<span class="lc-num">${num}</span><span class="lc-label">${ring.s}</span>`;
+        mc.addEventListener("click", () => spinSingle(i));
+        mobileLevers.appendChild(mc);
+    });
+}
+
+function setLeverSpinning(ri, on) {
+    const cls = on ? "add" : "remove";
+    leversPanel.children[ri].classList[cls]("spinning");
+    mobileLevers.children[ri].classList[cls]("spinning");
+    if(on){
+        leversPanel.children[ri].querySelector(".lever-value").textContent = "Girando…";
+    }
+}
+
+function updateLeverValue(ri) {
+    const ring = rings[ri];
+    const el = document.getElementById("lv"+ri);
+    if(el) el.textContent = ring.items[ring.currentIdx];
+}
+
+/* ================================================================
+   PANEL DE RESULTADO
+   ================================================================ */
+function buildResultGrid() {
+    resultGrid.innerHTML = "";
+    rings.forEach((ring, i) => {
+        const cell = document.createElement("div");
+        cell.className = "result-cell";
+        cell.id = "rc"+i;
+        cell.innerHTML = `
+            <span class="ring-id">${String(i+1).padStart(2,"0")}</span>
+            <div class="label">${ring.lg}</div>
+            <div class="value" id="rv${i}">${ring.items[ring.currentIdx]}</div>
+        `;
+        resultGrid.appendChild(cell);
+    });
+}
+
+function flashResultCell(ri) {
+    const cell = document.getElementById("rc"+ri);
+    const val = document.getElementById("rv"+ri);
+    if(!cell||!val) return;
+    val.textContent = rings[ri].items[rings[ri].currentIdx];
+    cell.classList.add("updated");
+    setTimeout(() => cell.classList.remove("updated"), 1200);
+}
+
+/* ================================================================
+   HUD
+   ================================================================ */
+function randomHUD() {
+    const pick = a => a[Math.floor(Math.random()*a.length)];
+    document.getElementById("hudIso").textContent = "ISO "+pick(["100","200","400","800","1600","3200"]);
+    document.getElementById("hudAp").textContent = pick(["f/1.4","f/2","f/2.8","f/4","f/5.6","f/8","f/11"]);
+    document.getElementById("hudSp").textContent = pick(["1/30s","1/60s","1/125s","1/250s","1/500s","1/1000s"]);
+    document.getElementById("hudFl").textContent = pick(["24mm","35mm","50mm","85mm","105mm","135mm"]);
+}
+
+/* ================================================================
+   EVENTOS
+   ================================================================ */
+shutterBtn.addEventListener("click", spinAll);
+
+document.addEventListener("keydown", e => {
+    // Espacio = disparar todo
+    if(e.code==="Space" && !rings.some(r=>r.spinning)){
+        e.preventDefault();
+        spinAll();
+    }
+    // 1-9 = anillo individual
+    const num = parseInt(e.key);
+    if(num>=1 && num<=9){
+        e.preventDefault();
+        spinSingle(num-1);
+    }
+});
+
+/* Hover 3D sutil en la rueda */
+wheelWrap.addEventListener("mousemove", e => {
+    if(animRunning) return;
+    const rect = wheelWrap.getBoundingClientRect();
+    const x = (e.clientX-rect.left)/rect.width - .5;
+    const y = (e.clientY-rect.top)/rect.height - .5;
+    wheelWrap.style.transform = `perspective(800px) rotateY(${x*3}deg) rotateX(${-y*3}deg)`;
+});
+wheelWrap.addEventListener("mouseleave", () => {
+    wheelWrap.style.transition = "transform .4s ease";
+    wheelWrap.style.transform = "perspective(800px) rotateY(0) rotateX(0)";
+    setTimeout(() => wheelWrap.style.transition="", 400);
+});
+
+/* Resize */
+let rto;
+window.addEventListener("resize", () => {
+    clearTimeout(rto);
+    rto = setTimeout(() => { calcGeometry(); drawWheel(); }, 200);
+});
+
+/* ================================================================
+   INICIALIZACIÓN
+   ================================================================ */
+function init() {
+    calcGeometry();
+    buildLevers();
+    buildResultGrid();
+    drawWheel();
+    randomHUD();
+
+    // Efecto de revelado inicial
+    wheelWrap.classList.add("dim");
+    setTimeout(() => {
+        playClick(true);
+        triggerFlash();
+        wheelWrap.classList.remove("dim");
+    }, 400);
+}
+
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(init);
+else window.addEventListener("load", init);
+</script>
+</body>
+</html>
