@@ -125,5 +125,4 @@ Documentación formal de arquitecturas, diagramas de flujo de datos y análisis 
 Disponible para roles de arquitectura técnica, desarrollo de infraestructura Web3 e integración de agentes de IA:
 
 * **LinkedIn:** [linkedin.com/in/rubenacedo](https://linkedin.com)
-* **Correo Electrónico:** [contacto@rubenacedo.com](mailto:contacto@rubenacedo.com)
 * **Repositorio de Proyectos:** [github.com/RubenAcedo](https://github.com)
