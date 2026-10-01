@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobApp Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+  --blue-900: #1E3A5F;
+  --blue-800: #1E40AF;
+  --blue-700: #1D4ED8;
+  --blue-600: #2563EB;
+  --blue-500: #3B82F6;
+  --blue-400: #60A5FA;
+  --blue-300: #93C5FD;
+  --blue-200: #BFDBFE;
+  --blue-100: #DBEAFE;
+  --blue-50: #EFF6FF;
+  --white: #FFFFFF;
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
+  --green: #10B981;
+  --yellow: #F59E0B;
+  --red: #EF4444;
+  --orange: #F97316;
+  --sidebar-w: 240px;
+  --list-w: 380px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,.08), 0 4px 6px rgba(0,0,0,.04);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--white);
+  color: var(--gray-800);
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ── Layout ── */
+#app { display:flex; height:100vh; }
+
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--blue-900);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+#sidebar .logo {
+  padding: 28px 24px 20px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+#sidebar .logo i { color: var(--blue-300); font-size: 22px; }
+
+#sidebar nav { flex:1; padding: 16px 12px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,.65);
+  transition: all .2s;
+  margin-bottom: 2px;
+  user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,.08); color: var(--white); }
+.nav-item.active { background: var(--blue-700); color: var(--white); font-weight: 600; }
+.nav-item i { width: 20px; text-align: center; font-size: 15px; }
+
+#main-area {
+  flex:1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--gray-50);
+}
+
+#topbar {
+  height: 60px;
+  min-height: 60px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+}
+#topbar h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+#topbar .breadcrumb {
+  font-size: 13px;
+  color: var(--gray-400);
+  font-weight: 400;
+}
+
+#content {
+  flex:1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Split layout ── */
+#list-panel {
+  width: var(--list-w);
+  min-width: var(--list-w);
+  border-right: 1px solid var(--gray-200);
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#list-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+}
+#list-header h2 { font-size: 15px; font-weight: 700; color: var(--gray-700); }
+
+#list-search {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+#list-search input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--gray-50);
+  outline: none;
+  transition: border-color .2s;
+}
+#list-search input:focus { border-color: var(--blue-400); }
+#list-search { position: relative; }
+#list-search i {
+  position: absolute;
+  left: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  font-size: 13px;
+}
+
+#list-items {
+  flex:1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.list-item {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+.list-item:hover { background: var(--blue-50); border-color: var(--blue-100); }
+.list-item.active { background: var(--blue-50); border-color: var(--blue-300); }
+.list-item .item-title { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
+.list-item .item-sub { font-size: 12px; color: var(--gray-500); }
+.list-item .item-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-top: 4px;
+}
+
+#detail-panel {
+  flex:1;
+  overflow-y: auto;
+  padding: 28px;
+  background: var(--gray-50);
+}
+
+/* ── Full layout (no split) ── */
+#full-panel {
+  flex:1;
+  overflow-y: auto;
+  padding: 28px;
+  background: var(--gray-50);
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.card-blue {
+  background: var(--blue-50);
+  border-color: var(--blue-200);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.card-header h3 { font-size: 15px; font-weight: 700; color: var(--gray-800); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  user-select: none;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--blue-700); color: var(--white); }
+.btn-primary:hover { background: var(--blue-800); }
+.btn-secondary { background: var(--blue-50); color: var(--blue-700); border: 1px solid var(--blue-200); }
+.btn-secondary:hover { background: var(--blue-100); }
+.btn-ghost { background: transparent; color: var(--gray-600); }
+.btn-ghost:hover { background: var(--gray-100); }
+.btn-danger { background: var(--red); color: var(--white); }
+.btn-danger:hover { background: #DC2626; }
+.btn-success { background: var(--green); color: var(--white); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 7px; width: 32px; height: 32px; justify-content: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+.badge-blue { background: var(--blue-100); color: var(--blue-800); }
+.badge-green { background: #D1FAE5; color: #065F46; }
+.badge-yellow { background: #FEF3C7; color: #92400E; }
+.badge-red { background: #FEE2E2; color: #991B1B; }
+.badge-gray { background: var(--gray-100); color: var(--gray-600); }
+.badge-orange { background: #FFEDD5; color: #9A3412; }
+
+.estado-Pendiente { background: var(--gray-100); color: var(--gray-600); }
+.estado-Enviado { background: var(--blue-100); color: var(--blue-800); }
+.estado-Entrevista { background: #FEF3C7; color: #92400E; }
+.estado-Oferta { background: #D1FAE5; color: #065F46; }
+.estado-Rechazado { background: #FEE2E2; color: #991B1B; }
+
+/* ── Forms ── */
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--gray-800);
+  background: var(--white);
+  outline: none;
+  transition: border-color .2s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--blue-400); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-group .error { color: var(--red); font-size: 12px; margin-top: 4px; }
+.form-group input.invalid { border-color: var(--red); }
+
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex:1; }
+
+/* ── Modal ── */
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+#modal-overlay.visible { opacity:1; pointer-events: all; }
+
+#modal-box {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  max-width: 600px;
+  width: 95%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px) scale(.97);
+  transition: transform .25s;
+}
+#modal-overlay.visible #modal-box { transform: translateY(0) scale(1); }
+
+#modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#modal-header h3 { font-size: 16px; font-weight: 700; }
+#modal-body { padding: 20px 24px; overflow-y: auto; flex:1; }
+#modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ── Toast ── */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+  animation: toastIn .3s ease;
+  max-width: 360px;
+}
+.toast-success { background: var(--green); }
+.toast-error { background: var(--red); }
+.toast-info { background: var(--blue-700); }
+
+@keyframes toastIn {
+  from { opacity:0; transform: translateY(12px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+/* ── Dashboard ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--blue-700); }
+.stat-card .stat-label { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+.stat-card i { font-size: 20px; color: var(--blue-400); margin-bottom: 8px; }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--gray-400);
+}
+.empty-state i { font-size: 40px; margin-bottom: 16px; color: var(--gray-300); }
+.empty-state p { font-size: 14px; margin-bottom: 16px; }
+
+/* ── Detail sections ── */
+.detail-title { font-size: 22px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+.detail-sub { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin: 20px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title i { color: var(--blue-500); font-size: 13px; }
+
+.rel-list { list-style: none; }
+.rel-list li {
+  padding: 10px 14px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.rel-list li .rel-name { font-weight: 600; color: var(--gray-800); }
+.rel-list li .rel-sub { color: var(--gray-500); font-size: 12px; }
+
+/* ── Tags ── */
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--blue-100);
+  color: var(--blue-800);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  #sidebar { width: 60px; min-width: 60px; }
+  #sidebar .logo span, .nav-item span { display: none; }
+  #sidebar .logo { padding: 20px 12px; justify-content: center; }
+  .nav-item { justify-content: center; padding: 11px; }
+  #list-panel { width: 280px; min-width: 280px; }
+}
+
+/* ── Confirm dialog ── */
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── Filter bar ── */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+}
+.filter-chip {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 99px;
+  cursor: pointer;
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-600);
+  transition: all .15s;
+}
+.filter-chip:hover { border-color: var(--blue-300); color: var(--blue-700); }
+.filter-chip.active { background: var(--blue-700); color: var(--white); border-color: var(--blue-700); }
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.fade-in { animation: fadeIn .3s ease; }
+
+/* asociar list in modal */
+.pick-list { list-style: none; }
+.pick-list li {
+  padding: 10px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pick-list li:hover { background: var(--blue-50); border-color: var(--blue-300); }
+.pick-list li .pick-title { font-size: 14px; font-weight: 600; }
+.pick-list li .pick-sub { font-size: 12px; color: var(--gray-500); }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <aside id="sidebar">
+    <div class="logo"><i class="fa-solid fa-briefcase"></i><span>JobApp Mgr</span></div>
+    <nav id="nav"></nav>
+  </aside>
+  <div id="main-area">
+    <div id="topbar"></div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-header"><h3></h3><button class="btn btn-ghost btn-icon" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   UTILIDADES
+   ══════════════════════════════════════════════ */
+function uuid() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function nowISO() {
+  return new Date().toISOString();
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+/* ══════════════════════════════════════════════
+   STORE — Capa de datos con localStorage
+   ══════════════════════════════════════════════ */
+const STORE_KEY = 'jobAppManagerData';
+
+const Store = {
+  _data: null,
+
+  init() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        this._data = JSON.parse(raw);
+        // Asegurar que existan todas las colecciones
+        if (!this._data.empresas) this._data.empresas = [];
+        if (!this._data.puestos) this._data.puestos = [];
+        if (!this._data.cartas) this._data.cartas = [];
+        if (!this._data.documentos) this._data.documentos = [];
+      } else {
+        this._data = { empresas: [], puestos: [], cartas: [], documentos: [] };
+      }
+    } catch (e) {
+      this._data = { empresas: [], puestos: [], cartas: [], documentos: [] };
+    }
+    this.save();
+  },
+
+  save() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(this._data));
+  },
+
+  get data() { return this._data; },
+
+  /* ── Empresas ── */
+  getEmpresas() { return this._data.empresas; },
+  getEmpresa(id) { return this._data.empresas.find(e => e.id === id); },
+
+  addEmpresa(d) {
+    const e = { id: uuid(), nombre: d.nombre, descripcion: d.descripcion || '', notas: d.notas || '', contactos: [], puestos: [], cartas: [] };
+    this._data.empresas.push(e);
+    this.save();
+    return e;
+  },
+
+  updateEmpresa(id, d) {
+    const e = this.getEmpresa(id);
+    if (!e) return null;
+    Object.assign(e, { nombre: d.nombre, descripcion: d.descripcion || '', notas: d.notas || '' });
+    this.save();
+    return e;
+  },
+
+  deleteEmpresa(id) {
+    const e = this.getEmpresa(id);
+    if (!e) return;
+    // Borrar puestos de la empresa
+    e.puestos.forEach(pid => {
+      this._data.puestos = this._data.puestos.filter(p => p.id !== pid);
+    });
+    // Desasociar cartas
+    e.cartas.forEach(cid => {
+      const c = this._data.cartas.find(x => x.id === cid);
+      if (c) { c.empresaId = null; c.puestoId = null; }
+    });
+    this._data.empresas = this._data.empresas.filter(x => x.id !== id);
+    this.save();
+  },
+
+  /* ── Contactos (dentro de empresa) ── */
+  getContacto(empresaId, contactoId) {
+    const e = this.getEmpresa(empresaId);
+    if (!e) return null;
+    return e.contactos.find(c => c.id === contactoId);
+  },
+
+  addContacto(empresaId, d) {
+    const e = this.getEmpresa(empresaId);
+    if (!e) return null;
+    const c = { id: uuid(), nombre: d.nombre, cargo: d.cargo || '', email: d.email || '', telefono: d.telefono || '', linkedin: d.linkedin || '', notas: d.notas || '' };
+    e.contactos.push(c);
+    this.save();
+    return c;
+  },
+
+  updateContacto(empresaId, contactoId, d) {
+    const c = this.getContacto(empresaId, contactoId);
+    if (!c) return null;
+    Object.assign(c, { nombre: d.nombre, cargo: d.cargo || '', email: d.email || '', telefono: d.telefono || '', linkedin: d.linkedin || '', notas: d.notas || '' });
+    this.save();
+    return c;
+  },
+
+  deleteContacto(empresaId, contactoId) {
+    const e = this.getEmpresa(empresaId);
+    if (!e) return;
+    e.contactos = e.contactos.filter(c => c.id !== contactoId);
+    // Puestos que referencian este contacto → null
+    this._data.puestos.forEach(p => {
+      if (p.empresaId === empresaId && p.contactoId === contactoId) p.contactoId = null;
+    });
+    this.save();
+  },
+
+  /* ── Puestos ── */
+  getPuestos() { return this._data.puestos; },
+  getPuesto(id) { return this._data.puestos.find(p => p.id === id); },
+  getPuestosByEmpresa(empresaId) { return this._data.puestos.filter(p => p.empresaId === empresaId); },
+
+  addPuesto(d) {
+    const p = {
+      id: uuid(), empresaId: d.empresaId, titulo: d.titulo, descripcion: d.descripcion || '',
+      estado: d.estado || 'Pendiente', contactoId: d.contactoId || null,
+      cartaPresentacionId: d.cartaPresentacionId || null, cvId: d.cvId || null,
+      cartaMotivacionalId: d.cartaMotivacionalId || null, documentos: d.documentos || [],
+      notas: d.notas || ''
+    };
+    this._data.puestos.push(p);
+    const e = this.getEmpresa(d.empresaId);
+    if (e && !e.puestos.includes(p.id)) e.puestos.push(p.id);
+    this.save();
+    return p;
+  },
+
+  updatePuesto(id, d) {
+    const p = this.getPuesto(id);
+    if (!p) return null;
+    Object.assign(p, {
+      titulo: d.titulo, descripcion: d.descripcion || '',
+      estado: d.estado || p.estado, contactoId: d.contactoId || null,
+      cartaPresentacionId: d.cartaPresentacionId || null, cvId: d.cvId || null,
+      cartaMotivacionalId: d.cartaMotivacionalId || null,
+      documentos: d.documentos || [], notas: d.notas || ''
+    });
+    this.save();
+    return p;
+  },
+
+  deletePuesto(id) {
+    const p = this.getPuesto(id);
+    if (!p) return;
+    const e = this.getEmpresa(p.empresaId);
+    if (e) e.puestos = e.puestos.filter(x => x !== id);
+    // Desasociar carta
+    if (p.cartaPresentacionId) {
+      const c = this._data.cartas.find(x => x.id === p.cartaPresentacionId);
+      if (c && c.puestoId === id) c.puestoId = null;
+    }
+    this._data.puestos = this._data.puestos.filter(x => x.id !== id);
+    this.save();
+  },
+
+  /* ── Cartas ── */
+  getCartas() { return this._data.cartas; },
+  getCarta(id) { return this._data.cartas.find(c => c.id === id); },
+
+  addCarta(d) {
+    const now = nowISO();
+    const c = { id: uuid(), titulo: d.titulo, contenido: d.contenido || '', fechaCreacion: now, fechaModificacion: now, tags: d.tags || [], empresaId: d.empresaId || null, puestoId: d.puestoId || null, historial: [] };
+    this._data.cartas.push(c);
+    if (c.empresaId) {
+      const e = this.getEmpresa(c.empresaId);
+      if (e && !e.cartas.includes(c.id)) e.cartas.push(c.id);
+    }
+    this.save();
+    return c;
+  },
+
+  updateCarta(id, d) {
+    const c = this.getCarta(id);
+    if (!c) return null;
+    // Guardar historial
+    if (c.contenido !== d.contenido) {
+      if (!c.historial) c.historial = [];
+      c.historial.push({ fecha: c.fechaModificacion, contenido: c.contenido });
+      if (c.historial.length > 20) c.historial.shift();
+    }
+    const oldEmpresaId = c.empresaId;
+    Object.assign(c, { titulo: d.titulo, contenido: d.contenido || '', tags: d.tags || [], empresaId: d.empresaId || null, puestoId: d.puestoId || null, fechaModificacion: nowISO() });
+    // Actualizar asociación en empresa
+    if (oldEmpresaId !== c.empresaId) {
+      if (oldEmpresaId) {
+        const oe = this.getEmpresa(oldEmpresaId);
+        if (oe) oe.cartas = oe.cartas.filter(x => x !== id);
+      }
+      if (c.empresaId) {
+        const ne = this.getEmpresa(c.empresaId);
+        if (ne && !ne.cartas.includes(id)) ne.cartas.push(id);
+      }
+    }
+    this.save();
+    return c;
+  },
+
+  duplicateCarta(id) {
+    const c = this.getCarta(id);
+    if (!c) return null;
+    return this.addCarta({ titulo: c.titulo + ' (copia)', contenido: c.contenido, tags: [...c.tags], empresaId: c.empresaId, puestoId: c.puestoId });
+  },
+
+  deleteCarta(id) {
+    const c = this.getCarta(id);
+    if (!c) return;
+    if (c.empresaId) {
+      const e = this.getEmpresa(c.empresaId);
+      if (e) e.cartas = e.cartas.filter(x => x !== id);
+    }
+    this._data.puestos.forEach(p => { if (p.cartaPresentacionId === id) p.cartaPresentacionId = null; });
+    this._data.cartas = this._data.cartas.filter(x => x.id !== id);
+    this.save();
+  },
+
+  /* ── Documentos ── */
+  getDocumentos() { return this._data.documentos; },
+  getDocumento(id) { return this._data.documentos.find(d => d.id === id); },
+
+  addDocumento(d) {
+    const doc = { id: uuid(), tipo: d.tipo || 'Nota', titulo: d.titulo, contenido: d.contenido || '', fecha: nowISO(), tags: d.tags || [] };
+    this._data.documentos.push(doc);
+    this.save();
+    return doc;
+  },
+
+  updateDocumento(id, d) {
+    const doc = this.getDocumento(id);
+    if (!doc) return null;
+    Object.assign(doc, { tipo: d.tipo || doc.tipo, titulo: d.titulo, contenido: d.contenido || '', tags: d.tags || [], fecha: nowISO() });
+    this.save();
+    return doc;
+  },
+
+  deleteDocumento(id) {
+    this._data.puestos.forEach(p => { p.documentos = p.documentos.filter(x => x !== id); });
+    this._data.documentos = this._data.documentos.filter(x => x.id !== id);
+    this.save();
+  },
+
+  /* ── Export / Import / Reset ── */
+  exportData() {
+    return JSON.stringify(this._data, null, 2);
+  },
+
+  importData(jsonStr) {
+    try {
+      const d = JSON.parse(jsonStr);
+      if (!d.empresas || !d.puestos || !d.cartas || !d.documentos) throw new Error('Estructura inválida');
+      this._data = d;
+      this.save();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  reset() {
+    this._data = { empresas: [], puestos: [], cartas: [], documentos: [] };
+    this.save();
+  }
+};
+
+/* ══════════════════════════════════════════════
+   ESTADO DE LA APLICACIÓN
+   ══════════════════════════════════════════════ */
+const App = {
+  currentView: 'home',
+  selectedId: null,
+  searchQuery: '',
+  filterTag: null,
+  filterEstado: null,
+  editing: false,
+};
+
+/* ══════════════════════════════════════════════
+   TOAST
+   ══════════════════════════════════════════════ */
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+/* ══════════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════════ */
+function openModal(title, bodyHtml, footerHtml = '') {
+  const overlay = document.getElementById('modal-overlay');
+  document.querySelector('#modal-header h3').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHtml;
+  document.getElementById('modal-footer').innerHTML = footerHtml;
+  overlay.classList.add('visible');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+}
+
+/* ══════════════════════════════════════════════
+   NAVEGACIÓN
+   ══════════════════════════════════════════════ */
+const NAV_ITEMS = [
+  { id: 'home', icon: 'fa-house', label: 'Inicio' },
+  { id: 'empresas', icon: 'fa-building', label: 'Empresas' },
+  { id: 'puestos', icon: 'fa-briefcase', label: 'Puestos' },
+  { id: 'cartas', icon: 'fa-file-lines', label: 'Cartas' },
+  { id: 'documentos', icon: 'fa-folder-open', label: 'Documentos' },
+  { id: 'ajustes', icon: 'fa-gear', label: 'Ajustes' },
+];
+
+function renderNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = NAV_ITEMS.map(n =>
+    `<div class="nav-item ${App.currentView === n.id ? 'active' : ''}" data-nav="${n.id}"><i class="fa-solid ${n.icon}"></i><span>${n.label}</span></div>`
+  ).join('');
+  nav.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => navigate(el.dataset.nav));
+  });
+}
+
+function navigate(view, id = null) {
+  App.currentView = view;
+  App.selectedId = id;
+  App.editing = false;
+  App.searchQuery = '';
+  App.filterTag = null;
+  App.filterEstado = null;
+  renderNav();
+  renderView();
+}
+
+/* ══════════════════════════════════════════════
+   RENDERIZADO PRINCIPAL
+   ══════════════════════════════════════════════ */
+function renderView() {
+  const topbar = document.getElementById('topbar');
+  const content = document.getElementById('content');
+  const v = App.currentView;
+
+  const titles = { home: 'Inicio', empresas: 'Empresas', puestos: 'Puestos', cartas: 'Cartas de Presentación', documentos: 'Documentos', ajustes: 'Ajustes' };
+  topbar.innerHTML = `<h1>${titles[v] || ''}</h1>`;
+
+  switch (v) {
+    case 'home': renderHome(content); break;
+    case 'empresas': renderEmpresas(content); break;
+    case 'puestos': renderPuestos(content); break;
+    case 'cartas': renderCartas(content); break;
+    case 'documentos': renderDocumentos(content); break;
+    case 'ajustes': renderAjustes(content); break;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   VISTA: INICIO
+   ══════════════════════════════════════════════ */
+function renderHome(container) {
+  const d = Store.data;
+  const ep = d.empresas.length;
+  const pu = d.puestos.length;
+  const ca = d.cartas.length;
+  const doc = d.documentos.length;
+
+  const estados = {};
+  d.puestos.forEach(p => { estados[p.estado] = (estados[p.estado] || 0) + 1; });
+
+  const ultPuestos = [...d.puestos].sort((a, b) => (b.fechaModificacion || b.id) > (a.fechaModificacion || a.id) ? 1 : -1).slice(0, 5);
+
+  container.innerHTML = `
+    <div id="full-panel" class="fade-in">
+      <div class="stats-grid">
+        <div class="stat-card"><i class="fa-solid fa-building"></i><div class="stat-value">${ep}</div><div class="stat-label">Empresas</div></div>
+        <div class="stat-card"><i class="fa-solid fa-briefcase"></i><div class="stat-value">${pu}</div><div class="stat-label">Puestos</div></div>
+        <div class="stat-card"><i class="fa-solid fa-file-lines"></i><div class="stat-value">${ca}</div><div class="stat-label">Cartas</div></div>
+        <div class="stat-card"><i class="fa-solid fa-folder-open"></i><div class="stat-value">${doc}</div><div class="stat-label">Documentos</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3><i class="fa-solid fa-chart-pie" style="color:var(--blue-500);margin-right:8px;"></i>Estado de Puestos</h3></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          ${Object.entries(estados).map(([k,v]) => `<span class="badge estado-${k}">${k}: ${v}</span>`).join('') || '<span style="color:var(--gray-400);font-size:13px;">Sin puestos registrados</span>'}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3><i class="fa-solid fa-clock" style="color:var(--blue-500);margin-right:8px;"></i>Puestos Recientes</h3></div>
+        ${ultPuestos.length ? `<ul class="rel-list">${ultPuestos.map(p => {
+          const e = Store.getEmpresa(p.empresaId);
+          return `<li><div><span class="rel-name">${esc(p.titulo)}</span><br><span class="rel-sub">${e ? esc(e.nombre) : '—'}</span></div><span class="badge estado-${p.estado}" style="font-size:10px;">${p.estado}</span></li>`;
+        }).join('')}</ul>` : '<p style="color:var(--gray-400);font-size:13px;">No hay puestos</p>'}
+      </div>
+    </div>
+  `;
+}
+
+/* ══════════════════════════════════════════════
+   VISTA: EMPRESAS
+   ══════════════════════════════════════════════ */
+function renderEmpresas(container) {
+  container.innerHTML = `
+    <div id="list-panel">
+      <div id="list-header">
+        <h2>Empresas</h2>
+        <button class="btn btn-primary btn-sm" id="btn-add-empresa"><i class="fa-solid fa-plus"></i> Nueva</button>
+      </div>
+      <div id="list-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar empresa..." id="search-empresa"></div>
+      <div id="list-items"></div>
+    </div>
+    <div id="detail-panel" class="fade-in"></div>
+  `;
+
+  document.getElementById('btn-add-empresa').addEventListener('click', () => showEmpresaForm());
+  document.getElementById('search-empresa').addEventListener('input', e => { App.searchQuery = e.target.value.toLowerCase(); renderEmpresaList(); });
+  renderEmpresaList();
+  renderEmpresaDetail();
+}
+
+function renderEmpresaList() {
+  const items = document.getElementById('list-items');
+  if (!items) return;
+  let list = Store.getEmpresas();
+  if (App.searchQuery) list = list.filter(e => e.nombre.toLowerCase().includes(App.searchQuery));
+
+  items.innerHTML = list.length ? list.map(e => `
+    <div class="list-item ${App.selectedId === e.id ? 'active' : ''}" data-id="${e.id}">
+      <div class="item-title">${esc(e.nombre)}</div>
+      <div class="item-sub">${e.contactos.length} contacto(s) · ${e.puestos.length} puesto(s)</div>
+    </div>
+  `).join('') : '<div class="empty-state"><i class="fa-solid fa-building"></i><p>No hay empresas</p></div>';
+
+  items.querySelectorAll('.list-item').forEach(el => {
+    el.addEventListener('click', () => { App.selectedId = el.dataset.id; App.editing = false; renderEmpresaList(); renderEmpresaDetail(); });
+  });
+}
+
+function renderEmpresaDetail() {
+  const panel = document.getElementById('detail-panel');
+  if (!panel) return;
+  if (!App.selectedId) { panel.innerHTML = '<div class="empty-state"><i class="fa-solid fa-building"></i><p>Selecciona una empresa</p></div>'; return; }
+  const e = Store.getEmpresa(App.selectedId);
+  if (!e) { panel.innerHTML = ''; return; }
+
+  const puestos = e.puestos.map(pid => Store.getPuesto(pid)).filter(Boolean);
+  const cartas = e.cartas.map(cid => Store.getCarta(cid)).filter(Boolean);
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div>
+        <div class="detail-title">${esc(e.nombre)}</div>
+        <div class="detail-sub">${esc(e.descripcion) || 'Sin descripción'}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" id="btn-edit-empresa"><i class="fa-solid fa-pen"></i> Editar</button>
+        <button class="btn btn-danger btn-sm" id="btn-del-empresa"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+
+    ${e.notas ? `<div class="card card-blue" style="margin-bottom:16px;"><p style="font-size:13px;color:var(--gray-700);white-space:pre-wrap;">${esc(e.notas)}</p></div>` : ''}
+
+    <div class="section-title"><i class="fa-solid fa-user"></i> Contactos (${e.contactos.length})</div>
+    ${e.contactos.length ? `<ul class="rel-list">${e.contactos.map(c => `
+      <li>
+        <div><span class="rel-name">${esc(c.nombre)}</span><br><span class="rel-sub">${esc(c.cargo)}${c.email ? ' · ' + esc(c.email) : ''}</span></div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm btn-edit-contacto" data-cid="${c.id}"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-ghost btn-sm btn-del-contacto" data-cid="${c.id}" style="color:var(--red);"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </li>
+    `).join('')}</ul>` : '<p style="color:var(--gray-400);font-size:13px;margin-bottom:8px;">Sin contactos</p>'}
+    <button class="btn btn-secondary btn-sm" id="btn-add-contacto" style="margin-bottom:16px;"><i class="fa-solid fa-plus"></i> Añadir contacto</button>
+
+    <div class="section-title"><i class="fa-solid fa-briefcase"></i> Puestos (${puestos.length})</div>
+    ${puestos.length ? `<ul class="rel-list">${puestos.map(p => `
+      <li>
+        <div><span class="rel-name">${esc(p.titulo)}</span><br><span class="rel-sub"><span class="badge estado-${p.estado}" style="font-size:10px;">${p.estado}</span></span></div>
+        <button class="btn btn-secondary btn-sm btn-goto-puesto" data-pid="${p.id}"><i class="fa-solid fa-arrow-right"></i></button>
+      </li>
+    `).join('')}</ul>` : '<p style="color:var(--gray-400);font-size:13px;margin-bottom:8px;">Sin puestos</p>'}
+    <button class="btn btn-secondary btn-sm" id="btn-add-puesto-emp" style="margin-bottom:16px;"><i class="fa-solid fa-plus"></i> Añadir puesto</button>
+
+    <div class="section-title"><i class="fa-solid fa-file-lines"></i> Cartas asociadas (${cartas.length})</div>
+    ${cartas.length ? `<ul class="rel-list">${cartas.map(c => `
+      <li>
+        <div><span class="rel-name">${esc(c.titulo)}</span><br><span class="rel-sub">${c.fechaModificacion ? 'Mod: ' + c.fechaModificacion.split('T')[0] : ''}</span></div>
+        <button class="btn btn-secondary btn-sm btn-goto-carta" data-cid="${c.id}"><i class="fa-solid fa-arrow-right"></i></button>
+      </li>
+    `).join('')}</ul>` : '<p style="color:var(--gray-400);font-size:13px;margin-bottom:8px;">Sin cartas asociadas</p>'}
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary btn-sm" id="btn-asoc-carta"><i class="fa-solid fa-link"></i> Asociar carta existente</button>
+      <button class="btn btn-primary btn-sm" id="btn-new-carta-emp"><i class="fa-solid fa-plus"></i> Nueva carta</button>
+    </div>
+  `;
+
+  // Eventos
+  panel.querySelector('#btn-edit-empresa')?.addEventListener('click', () => showEmpresaForm(e));
+  panel.querySelector('#btn-del-empresa')?.addEventListener('click', () => confirmDelete('empresa', e.id, e.nombre));
+  panel.querySelector('#btn-add-contacto')?.addEventListener('click', () => showContactoForm(e.id));
+  panel.querySelector('#btn-add-puesto-emp')?.addEventListener('click', () => showPuestoForm({ empresaId: e.id }));
+  panel.querySelector('#btn-asoc-carta')?.addEventListener('click', () => showPickCarta(e.id));
+  panel.querySelector('#btn-new-carta-emp')?.addEventListener('click', () => showCartaForm(null, e.id));
+
+  panel.querySelectorAll('.btn-edit-contacto').forEach(btn => btn.addEventListener('click', () => {
+    const c = e.contactos.find(x => x.id === btn.dataset.cid);
+    if (c) showContactoForm(e.id, c);
+  }));
+  panel.querySelectorAll('.btn-del-contacto').forEach(btn => btn.addEventListener('click', () => {
+    const c = e.contactos.find(x => x.id === btn.dataset.cid);
+    if (c) confirmDelete('contacto', e.id, c.nombre, btn.dataset.cid);
+  }));
+  panel.querySelectorAll('.btn-goto-puesto').forEach(btn => btn.addEventListener('click', () => { App.currentView = 'puestos'; App.selectedId = btn.dataset.pid; renderNav(); renderView(); }));
+  panel.querySelectorAll('.btn-goto-carta').forEach(btn => btn.addEventListener('click', () => { App.currentView = 'cartas'; App.selectedId = btn.dataset.cid; renderNav(); renderView(); }));
+}
+
+/* ── Formulario Empresa ── */
+function showEmpresaForm(empresa = null) {
+  const isEdit = !!empresa;
+  const html = `
+    <div class="form-group"><label>Nombre *</label><input type="text" id="f-nombre" value="${isEdit ? esc(empresa.nombre) : ''}" placeholder="Nombre de la empresa"></div>
+    <div class="form-group"><label>Descripción</label><textarea id="f-desc" rows="2" placeholder="Breve descripción">${isEdit ? esc(empresa.descripcion) : ''}</textarea></div>
+    <div class="form-group"><label>Notas</label><textarea id="f-notas" rows="3" placeholder="Notas internas">${isEdit ? esc(empresa.notas) : ''}</textarea></div>
+  `;
+  openModal(isEdit ? 'Editar Empresa' : 'Nueva Empresa', html, `
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="btn-save-empresa">Guardar</button>
+  `);
+  document.getElementById('btn-save-empresa').addEventListener('click', () => {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    if (!nombre) { document.getElementById('f-nombre').classList.add('invalid'); return; }
+    if (isEdit) { Store.updateEmpresa(empresa.id, { nombre, descripcion: document.getElementById('f-desc').value, notas: document.getElementById('f-notas').value }); }
+    else { const ne = Store.addEmpresa({ nombre, descripcion: document.getElementById('f-desc').value, notas: document.getElementById('f-notas').value }); App.selectedId = ne.id; }
+    closeModal(); renderView(); toast(isEdit ? 'Empresa actualizada' : 'Empresa creada');
+  });
+}
+
+/* ── Formulario Contacto ── */
+function showContactoForm(empresaId, contacto = null) {
+  const isEdit = !!contacto;
+  const html = `
+    <div class="form-group"><label>Nombre *</label><input type="text" id="f-nombre" value="${isEdit ? esc(contacto.nombre) : ''}"></div>
+    <div class="form-group"><label>Cargo</label><input type="text" id="f-cargo" value="${isEdit ? esc(contacto.cargo) : ''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="email" id="f-email" value="${isEdit ? esc(contacto.email) : ''}"></div>
+      <div class="form-group"><label>Teléfono</label><input type="tel" id="f-tel" value="${isEdit ? esc(contacto.telefono) : ''}"></div>
+    </div>
+    <div class="form-group"><label>LinkedIn</label><input type="url" id="f-linkedin" value="${isEdit ? esc(contacto.linkedin) : ''}"></div>
+    <div class="form-group"><label>Notas</label><textarea id="f-notas" rows="2">${isEdit ? esc(contacto.notas) : ''}</textarea></div>
+  `;
+  openModal(isEdit ? 'Editar Contacto' : 'Nuevo Contacto', html, `
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="btn-save-contacto">Guardar</button>
+  `);
+  document.getElementById('btn-save-contacto').addEventListener('click', () => {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    if (!nombre) { document.getElementById('f-nombre').classList.add('invalid'); return; }
+    const d = { nombre, cargo: document.getElementById('f-cargo').value, email: document.getElementById('f-email').value, telefono: document.getElementById('f-tel').value, linkedin: document.getElementById('f-linkedin').value, notas: document.getElementById('f-notas').value };
+    if (isEdit) Store.updateContacto(empresaId, contacto.id, d);
+    else Store.addContacto(empresaId, d);
+    closeModal(); renderView(); toast(isEdit ? 'Contacto actualizado' : 'Contacto añadido');
+  });
+}
+
+/* ── Seleccionar carta para asociar ── */
+function showPickCarta(empresaId) {
+  const cartas = Store.getCartas().filter(c => c.empresaId !== empresaId);
+  const html = cartas.length ? `<ul class="pick-list">${cartas.map(c => `
+    <li data-cid="${c.id}"><i class="fa-solid fa-file-lines" style="color:var(--blue-500);"></i><div><div class="pick-title">${esc(c.titulo)}</div><div class="pick-sub">${c.tags.join(', ') || 'Sin tags'}</div></div></li>
+  `).join('')}</ul>` : '<p style="color:var(--gray-400);font-size:13px;">No hay cartas disponibles para asociar</p>';
+  openModal('Asociar Carta Existente', html, '');
+  document.querySelectorAll('.pick-list li').forEach(li => li.addEventListener('click', () => {
+    const c = Store.getCarta(li.dataset.cid);
+    if (c) { c.empresaId = empresaId; const e = Store.getEmpresa(empresaId); if (e && !e.cartas.includes(c.id)) e.cartas.push(c.id); Store.save(); }
+    closeModal(); renderView(); toast('Carta asociada');
+  }));
+}
+
+/* ══════════════════════════════════════════════
+   VISTA: PUESTOS
+   ══════════════════════════════════════════════ */
+function renderPuestos(container) {
+  const estados = ['Pendiente', 'Enviado', 'Entrevista', 'Oferta', 'Rechazado'];
+  container.innerHTML = `
+    <div id="list-panel">
+      <div id="list-header">
+        <h2>Puestos</h2>
+        <button class="btn btn-primary btn-sm" id="btn-add-puesto"><i class="fa-solid fa-plus"></i> Nuevo</button>
+      </div>
+      <div id="list-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar puesto..." id="search-puesto"></div>
+      <div class="filter-bar" id="filter-estados">
+        <span class="filter-chip ${!App.filterEstado ? 'active' : ''}" data-est="">Todos</span>
+        ${estados.map(es => `<span class="filter-chip ${App.filterEstado === es ? 'active' : ''}" data-est="${es}">${es}</span>`).join('')}
+      </div>
+      <div id="list-items"></div>
+    </div>
+    <div id="detail-panel" class="fade-in"></div>
+  `;
+
+  document.getElementById('btn-add-puesto').addEventListener('click', () => showPuestoForm());
+  document.getElementById('search-puesto').addEventListener('input', e => { App.searchQuery = e.target.value.toLowerCase(); renderPuestoList(); });
+  document.getElementById('filter-estados').querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => { App.filterEstado = chip.dataset.est || null; renderPuestos(document.getElementById('content')); });
+  });
+  renderPuestoList();
+  renderPuestoDetail();
+}
+
+function renderPuestoList() {
+  const items = document.getElementById('list-items');
+  if (!items) return;
+  let list = Store.getPuestos();
+  if (App.searchQuery) list = list.filter(p => p.titulo.toLowerCase().includes(App.searchQuery));
+  if (App.filterEstado) list = list.filter(p => p.estado === App.filterEstado);
+
+  items.innerHTML = list.length ? list.map(p => {
+    const e = Store.getEmpresa(p.empresaId);
+    return `<div class="list-item ${App.selectedId === p.id ? 'active' : ''}" data-id="${p.id}">
+      <div class="item-title">${esc(p.titulo)}</div>
+      <div class="item-sub">${e ? esc(e.nombre) : '—'}</div>
+      <span class="badge estado-${p.estado}" style="font-size:10px;margin-top:4px;">${p.estado}</span>
+    </div>`;
+  }).join('') : '<div class="empty-state"><i class="fa-solid fa-briefcase"></i><p>No hay puestos</p></div>';
+
+  items.querySelectorAll('.list-item').forEach(el => {
+    el.addEventListener('click', () => { App.selectedId = el.dataset.id; App.editing = false; renderPuestoList(); renderPuestoDetail(); });
+  });
+}
+
+function renderPuestoDetail() {
+  const panel = document.getElementById('detail-panel');
+  if (!panel) return;
+  if (!App.selectedId) { panel.innerHTML = '<div class="empty-state"><i class="fa-solid fa-briefcase"></i><p>Selecciona un puesto</p></div>'; return; }
+  const p = Store.getPuesto(App.selectedId);
+  if (!p) { panel.innerHTML = ''; return; }
+  const e = Store.getEmpresa(p.empresaId);
+  const contacto = p.contactoId ? e?.contactos.find(c => c.id === p.contactoId) : null;
+  const carta = p.cartaPresentacionId ? Store.getCarta(p.cartaPresentacionId) : null;
+  const cv = p.cvId ? Store.getDocumento(p.cvId) : null;
+  const cartaMot = p.cartaMotivacionalId ? Store.getDocumento(p.cartaMotivacionalId) : null;
+  const docs = p.documentos.map(did => Store.getDocumento(did)).filter(Boolean);
+
+  const estados = ['Pendiente', 'Enviado', 'Entrevista', 'Oferta', 'Rechazado'];
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div>
+        <div class="detail-title">${esc(p.titulo)}</div>
+        <div class="detail-sub">${e ? esc(e.nombre) : 'Sin empresa'} · <span class="badge estado-${p.estado}">${p.estado}</span></div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" id="btn-edit-puesto"><i class="fa-solid fa-pen"></i> Editar</button>
+        <button class="btn btn-danger btn-sm" id="btn-del-puesto"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Estado del proceso</h3></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${estados.map(es => `<button class="btn ${p.estado === es ? 'btn-primary' : 'btn-secondary'} btn-sm btn-estado" data-est="${es}">${es}</button>`).join('')}
+      </div>
+    </div>
+
+    ${p.descripcion ? `<div class="card card-blue"><p style="font-size:13px;white-space:pre-wrap;">${esc(p.descripcion)}</p></div>` : ''}
+
+    <div class="card">
+      <div class="card-header"><h3><i class="fa-solid fa-link" style="color:var(--blue-500);margin-right:6px;"></i>Asociaciones</h3></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="section-title" style="margin-top:0;"><i class="fa-solid fa-user"></i> Contacto</div>
+          ${contacto ? `<div style="font-size:13px;"><strong>${esc(contacto.nombre)}</strong> — ${esc(contacto.cargo)}<br><span style="color:var(--gray-500);">${contacto.email ? esc(contacto.email) : ''}</span></div>
+          <button class="btn btn-ghost btn-sm" id="btn-desasoc-contacto" style="margin-top:4px;color:var(--red);font-size:11px;"><i class="fa-solid fa-unlink"></i> Desasociar</button>` 
+          : `<span style="color:var(--gray-400);font-size:13px;">Sin contacto</span>`}
+          <button class="btn btn-secondary btn-sm" id="btn-asoc-contacto" style="margin-top:4px;"><i class="fa-solid fa-link"></i> ${contacto ? 'Cambiar' : 'Asociar'}</button>
+        </div>
+        <div>
+          <div class="section-title" style="margin-top:0;"><i class="fa-solid fa-file-lines"></i> Carta de Presentación</div>
+          ${carta ? `<div style="font-size:13px;"><strong>${esc(carta.titulo)}</strong></div>
+          <button class="btn btn-ghost btn-sm" id="btn-desasoc-carta" style="margin-top:4px;color:var(--red);font-size:11px;"><i class="fa-solid fa-unlink"></i> Desasociar</button>` 
+          : `<span style="color:var(--gray-400);font-size:13px;">Sin carta</span>`}
+          <button class="btn btn-secondary btn-sm" id="btn-asoc-carta-puesto" style="margin-top:4px;"><i class="fa-solid fa-link"></i> ${carta ? 'Cambiar' : 'Asociar'}</button>
+        </div>
+        <div>
+          <div class="section-title" style="margin-top:0;"><i class="fa-solid fa-file"></i> CV</div>
+          ${cv ? `<div style="font-size:13px;"><strong>${esc(cv.titulo)}</strong></div>
+          <button class="btn btn-ghost btn-sm" id="btn-desasoc-cv" style="margin-top:4px;color:var(--red);font-size:11px;"><i class="fa-solid fa-unlink"></i> Desasociar</button>` 
+          : `<span style="color:var(--gray-400);font-size:13px;">Sin CV</span>`}
+          <button class="btn btn-secondary btn-sm" id="btn-asoc-cv" style="margin-top:4px;"><i class="fa-solid fa-link"></i> ${cv ? 'Cambiar' : 'Asociar'}</button>
+        </div>
+        <div>
+          <div class="section-title" style="margin-top:0;"><i class="fa-solid fa-envelope"></i> Carta Motivacional</div>
+          ${cartaMot ? `<div style="font-size:13px;"><strong>${esc(cartaMot.titulo)}</strong></div>
+          <button class="btn btn-ghost btn-sm" id="btn-desasoc-cmot" style="margin-top:4px;color:var(--red);font-size:11px;"><i class="fa-solid fa-unlink"></i> Desasociar</button>` 
+          : `<span style="color:var(--gray-400);font-size:13px;">Sin carta motivacional</span>`}
+          <button class="btn btn-secondary btn-sm" id="btn-asoc-cmot" style="margin-top:4px;"><i class="fa-solid fa-link"></i> ${cartaMot ? 'Cambiar' : 'Asociar'}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title"><i class="fa-solid fa-folder-open"></i> Documentos adicionales (${docs.length})</div>
+    ${docs.length ? `<ul class="rel-list">${docs.map(d => `
+      <li><div><span class="rel-name">${esc(d.titulo)}</span><br><span class="rel-sub"><span class="badge badge-blue" style="font-size:10px;">${d.tipo}</span></span></div>
+      <div style="display:flex;gap:4px;">
+        <button class="btn btn-secondary btn-sm btn-goto-doc" data-did="${d.id}"><i class="fa-solid fa-arrow-right"></i></button>
+        <button class="btn btn-ghost btn-sm btn-desasoc-doc" data-did="${d.id}" style="color:var(--red);"><i class="fa-solid fa-unlink"></i></button>
+      </div></li>
+    `).join('')}</ul>` : ''}
+    <button class="btn btn-secondary btn-sm" id="btn-asoc-doc-puesto"><i class="fa-solid fa-plus"></i> Añadir documento</button>
+
+    ${p.notas ? `<div class="section-title"><i class="fa-solid fa-sticky-note"></i> Notas</div><div class="card card-blue"><p style="font-size:13px;white-space:pre-wrap;">${esc(p.notas)}</p></div>` : ''}
+  `;
+
+  // Eventos
+  panel.querySelector('#btn-edit-puesto')?.addEventListener('click', () => showPuestoForm(p));
+  panel.querySelector('#btn-del-puesto')?.addEventListener('click', () => confirmDelete('puesto', p.id, p.titulo));
+  panel.querySelectorAll('.btn-estado').forEach(btn => btn.addEventListener('click', () => { Store.updatePuesto(p.id, { ...p, estado: btn.dataset.est }); renderPuestoList(); renderPuestoDetail(); }));
+  
+  panel.querySelector('#btn-asoc-contacto')?.addEventListener('click', () => showPickContacto(p));
+  panel.querySelector('#btn-desasoc-contacto')?.addEventListener('click', () => { Store.updatePuesto(p.id, { ...p, contactoId: null }); renderPuestoDetail(); });
+  panel.querySelector('#btn-asoc-carta-puesto')?.addEventListener('click', () => showPickCartaForPuesto(p));
+  panel.querySelector('#btn-desasoc-carta')?.addEventListener('click', () => { Store.updatePuesto(p.id, { ...p, cartaPresentacionId: null }); renderPuestoDetail(); });
+  panel.querySelector('#btn-asoc-cv')?.addEventListener('click', () => showPickDocumentoForPuesto(p, 'cv'));
+  panel.querySelector('#btn-desasoc-cv')?.addEventListener('click', () => { Store.updatePuesto(p.id, { ...p, cvId: null }); renderPuestoDetail(); });
+  panel.querySelector('#btn-asoc-cmot')?.addEventListener('click', () => showPickDocumentoForPuesto(p, 'cartaMotivacional'));
+  panel.querySelector('#btn-desasoc-cmot')?.addEventListener('click', () => { Store.updatePuesto(p.id, { ...p, cartaMotivacionalId: null }); renderPuestoDetail(); });
+  panel.querySelector('#btn-asoc-doc-puesto')?.addEventListener('click', () => showPickDocumentoForPuesto(p, 'documento'));
+  panel.querySelectorAll('.btn-goto-doc').forEach(btn => btn.addEventListener('click', () => { App.currentView = 'documentos'; App.selectedId = btn.dataset.did; renderNav(); renderView(); }));
+  panel.querySelectorAll('.btn-desasoc-doc').forEach(btn => btn.addEventListener('click', () => {
+    const newDocs = p.documentos.filter(x => x !== btn.dataset.did);
+    Store.updatePuesto(p.id, { ...p, documentos: newDocs });
+    renderPuestoDetail();
+  }));
+}
+
+/* ── Formulario Puesto ── */
+function showPuestoForm(puesto = null) {
+  const isEdit = !!puesto;
+  const empresas = Store.getEmpresas();
+  const html = `
+    <div class="form-group"><label>Empresa *</label><select id="f-empresa">${empresas.map(e => `<option value="${e.id}" ${isEdit && puesto.empresaId === e.id ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Título *</label><input type="text" id="f-titulo" value="${isEdit ? esc(puesto.titulo) : ''}"></div>
+    <div class="form-group"><label>Descripción</label><textarea id="f-desc" rows="2">${isEdit ? esc(puesto.descripcion) : ''}</textarea></div>
+    <div class="form-group"><label>Estado</label><select id="f-estado">${['Pendiente','Enviado','Entrevista','Oferta','Rechazado'].map(es => `<option value="${es}" ${isEdit && puesto.estado === es ? 'selected' : ''}>${es}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Notas</label><textarea id="f-notas" rows="3">${isEdit ? esc(puesto.notas) : ''}</textarea></div>
+  `;
+  openModal(isEdit ? 'Editar Puesto' : 'Nuevo Puesto', html, `
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="btn-save-puesto">Guardar</button>
+  `);
+  document.getElementById('btn-save-puesto').addEventListener('click', () => {
+    const titulo = document.getElementById('f-titulo').value.trim();
+    const empresaId = document.getElementById('f-empresa').value;
+    if (!titulo) { document.getElementById('f-titulo').classList.add('invalid'); return; }
+    const d = { empresaId, titulo, descripcion: document.getElementById('f-desc').value, estado: document.getElementById('f-estado').value, notas: document.getElementById('f-notas').value };
+    if (isEdit) { Store.updatePuesto(puesto.id, { ...puesto, ...d }); }
+    else { const np = Store.addPuesto(d); App.selectedId = np.id; }
+    closeModal(); renderView(); toast(isEdit ? 'Puesto actualizado' : 'Puesto creado');
+  });
+}
+
+/* ── Seleccionar contacto para puesto ── */
+function showPickContacto(puesto) {
+  const e = Store.getEmpresa(puesto.empresaId);
+  if (!e || !e.contactos.length) { toast('No hay contactos en esta empresa', 'info'); return; }
+  const html = `<ul class="pick-list">${e.contactos.map(c => `
+    <li data-cid="${c.id}"><i class="fa-solid fa-user" style="color:var(--blue-500);"></i><div><div class="pick-title">${esc(c.nombre)}</div><div class="pick-sub">${esc(c.cargo)}</div></div></li>
+  `).join('')}</ul>`;
+  openModal('Seleccionar Contacto', html, '');
+  document.querySelectorAll('.pick-list li').forEach(li => li.addEventListener('click', () => {
+    Store.updatePuesto(puesto.id, { ...puesto, contactoId: li.dataset.cid });
+    closeModal(); renderPuestoDetail(); toast('Contacto asociado');
+  }));
+}
+
+/* ── Seleccionar carta para puesto ── */
+function showPickCartaForPuesto(puesto) {
+  const cartas = Store.getCartas();
+  if (!cartas.length) { toast('No hay cartas', 'info'); return; }
+  const html = `<ul class="pick-list">${cartas.map(c => `
+    <li data-cid="${c.id}"><i class="fa-solid fa-file-lines" style="color:var(--blue-500);"></i><div><div class="pick-title">${esc(c.titulo)}</div><div class="pick-sub">${c.tags.join(', ') || 'Sin tags'}</div></div></li>
+  `).join('')}</ul>`;
+  openModal('Seleccionar Carta de Presentación', html, '');
+  document.querySelectorAll('.pick-list li').forEach(li => li.addEventListener('click', () => {
+    Store.updatePuesto(puesto.id, { ...puesto, cartaPresentacionId: li.dataset.cid });
+    closeModal(); renderPuestoDetail(); toast('Carta asociada');
+  }));
+}
+
+/* ── Seleccionar documento para puesto ── */
+function showPickDocumentoForPuesto(puesto, field) {
+  const docs = Store.getDocumentos();
+  const filtered = field === 'cv' ? docs.filter(d => d.tipo === 'CV') : field === 'cartaMotivacional' ? docs.filter(d => d.tipo === 'CartaMotivacional') : docs;
+  if (!filtered.length) { toast('No hay documentos disponibles', 'info'); return; }
+  const html = `<ul class="pick-list">${filtered.map(d => `
+    <li data-did="${d.id}"><i class="fa-solid fa-file" style="color:var(--blue-500);"></i><div><div class="pick-title">${esc(d.titulo)}</div><div class="pick-sub"><span class="badge badge-blue" style="font-size:10px;">${d.tipo}</span></div></div></li>
+  `).join('')}</ul>`;
+  openModal(field === 'cv' ? 'Seleccionar CV' : field === 'cartaMotivacional' ? 'Seleccionar Carta Motivacional' : 'Seleccionar Documento', html, '');
+  document.querySelectorAll('.pick-list li').forEach(li => li.addEventListener('click', () => {
+    if (field === 'cv') Store.updatePuesto(puesto.id, { ...puesto, cvId: li.dataset.did });
+    else if (field === 'cartaMotivacional') Store.updatePuesto(puesto.id, { ...puesto, cartaMotivacionalId: li.dataset.did });
+    else {
+      const newDocs = [...puesto.documentos];
+      if (!newDocs.includes(li.dataset.did)) newDocs.push(li.dataset.did);
+      Store.updatePuesto(puesto.id, { ...puesto, documentos: newDocs });
+    }
+    closeModal(); renderPuestoDetail(); toast('Documento asociado');
+  }));
+}
+
+/* ══════════════════════════════════════════════
+   VISTA: CARTAS
+   ══════════════════════════════════════════════ */
+function renderCartas(container) {
+  const allTags = [...new Set(Store.getCartas().flatMap(c => c.tags))];
+  container.innerHTML = `
+    <div id="list-panel">
+      <div id="list-header">
+        <h2>Cartas</h2>
+        <button class="btn btn-primary btn-sm" id="btn-add-carta"><i class="fa-solid fa-plus"></i> Nueva</button>
+      </div>
+      <div id="list-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar carta..." id="search-carta"></div>
+      ${allTags.length ? `<div class="filter-bar" id="filter-tags-cartas">
+        <span class="filter-chip ${!App.filterTag ? 'active' : ''}" data-tag="">Todas</span>
+        ${allTags.map(t => `<span class="filter-chip ${App.filterTag === t ? 'active' : ''}" data-tag="${esc(t)}">${esc(t)}</span>`).join('')}
+      </div>` : ''}
+      <div id="list-items"></div>
+    </div>
+    <div id="detail-panel" class="fade-in"></div>
+  `;
+
+  document.getElementById('btn-add-carta').addEventListener('click', () => showCartaForm());
+  document.getElementById('search-carta').addEventListener('input', e => { App.searchQuery = e.target.value.toLowerCase(); renderCartaList(); });
+  document.getElementById('filter-tags-cartas')?.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => { App.filterTag = chip.dataset.tag || null; renderCartas(document.getElementById('content')); });
+  });
+  renderCartaList();
+  renderCartaDetail();
+}
+
+function renderCartaList() {
+  const items = document.getElementById('list-items');
+  if (!items) return;
+  let list = Store.getCartas();
+  if (App.searchQuery) list = list.filter(c => c.titulo.toLowerCase().includes(App.searchQuery) || c.contenido.toLowerCase().includes(App.searchQuery));
+  if (App.filterTag) list = list.filter(c => c.tags.includes(App.filterTag));
+
+  items.innerHTML = list.length ? list.map(c => {
+    const e = c.empresaId ? Store.getEmpresa(c.empresaId) : null;
+    return `<div class="list-item ${App.selectedId === c.id ? 'active' : ''}" data-id="${c.id}">
+      <div class="item-title">${esc(c.titulo)}</div>
+      <div class="item-sub">${e ? esc(e.nombre) : 'Sin empresa'} · ${c.fechaModificacion?.split('T')[0] || ''}</div>
+      ${c.tags.length ? `<div class="tag-list" style="margin-top:4px;">${c.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('') : '<div class="empty-state"><i class="fa-solid fa-file-lines"></i><p>No hay cartas</p></div>';
+
+  items.querySelectorAll('.list-item').forEach(el => {
+    el.addEventListener('click', () => { App.selectedId = el.dataset.id; App.editing = false; renderCartaList(); renderCartaDetail(); });
+  });
+}
+
+function renderCartaDetail() {
+  const panel = document.getElementById('detail-panel');
+  if (!panel) return;
+  if (!App.selectedId) { panel.innerHTML = '<div class="empty-state"><i class="fa-solid fa-file-lines"></i><p>Selecciona una carta</p></div>'; return; }
+  const c = Store.getCarta(App.selectedId);
+  if (!c) { panel.innerHTML = ''; return; }
+  const e = c.empresaId ? Store.getEmpresa(c.empresaId) : null;
+  const p = c.puestoId ? Store.getPuesto(c.puestoId) : null;
+  const histLen = c.historial?.length || 0;
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div>
+        <div class="detail-title">${esc(c.titulo)}</div>
+        <div class="detail-sub">${e ? esc(e.nombre) : 'Sin empresa'}${p ? ' · ' + esc(p.titulo) : ''} · Creada: ${c.fechaCreacion?.split('T')[0]} · Modificada: ${c.fechaModificacion?.split('T')[0]}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" id="btn-edit-carta"><i class="fa-solid fa-pen"></i> Editar</button>
+        <button class="btn btn-secondary btn-sm" id="btn-dup-carta"><i class="fa-solid fa-copy"></i> Duplicar</button>
+        <button class="btn btn-danger btn-sm" id="btn-del-carta"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+
+    ${c.tags.length ? `<div class="tag-list" style="margin-bottom:12px;">${c.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+
+    <div class="card" style="min-height:120px;">
+      <div class="card-header"><h3>Contenido</h3></div>
+      <p style="font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--gray-700);">${esc(c.contenido) || '<em style="color:var(--gray-400);">Sin contenido</em>'}</p>
+    </div>
+
+    ${histLen ? `<div class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Historial de cambios (${histLen})</div>
+    <div class="card">
+      <ul class="rel-list">${(c.historial || []).slice(-5).reverse().map(h => `<li><span class="rel-sub">${h.fecha?.split('T')[0] || ''}</span></li>`).join('')}</ul>
+    </div>` : ''}
+  `;
+
+  panel.querySelector('#btn-edit-carta')?.addEventListener('click', () => showCartaForm(c));
+  panel.querySelector('#btn-dup-carta')?.addEventListener('click', () => { Store.duplicateCarta(c.id); renderView(); toast('Carta duplicada'); });
+  panel.querySelector('#btn-del-carta')?.addEventListener('click', () => confirmDelete('carta', c.id, c.titulo));
+}
+
+/* ── Formulario Carta ── */
+function showCartaForm(carta = null, preEmpresaId = null) {
+  const isEdit = !!carta;
+  const empresas = Store.getEmpresas();
+  const eid = isEdit ? carta.empresaId : preEmpresaId;
+  const puestos = eid ? Store.getPuestosByEmpresa(eid) : [];
+
+  const html = `
+    <div class="form-group"><label>Título *</label><input type="text" id="f-titulo" value="${isEdit ? esc(carta.titulo) : ''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Empresa</label><select id="f-empresa"><option value="">— Ninguna —</option>${empresas.map(e => `<option value="${e.id}" ${eid === e.id ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Puesto</label><select id="f-puesto"><option value="">— Ninguno —</option>${puestos.map(p => `<option value="${p.id}" ${isEdit && carta.puestoId === p.id ? 'selected' : ''}>${esc(p.titulo)}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label>Tags (separados por coma)</label><input type="text" id="f-tags" value="${isEdit ? carta.tags.join(', ') : ''}" placeholder="tag1, tag2"></div>
+    <div class="form-group"><label>Contenido</label><textarea id="f-contenido" rows="10" style="min-height:200px;">${isEdit ? esc(carta.contenido) : ''}</textarea></div>
+  `;
+  openModal(isEdit ? 'Editar Carta' : 'Nueva Carta', html, `
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="btn-save-carta">Guardar</button>
+  `);
+
+  // Actualizar puestos al cambiar empresa
+  document.getElementById('f-empresa').addEventListener('change', function() {
+    const pOpts = Store.getPuestosByEmpresa(this.value);
+    document.getElementById('f-puesto').innerHTML = `<option value="">— Ninguno —</option>${pOpts.map(p => `<option value="${p.id}">${esc(p.titulo)}</option>`).join('')}`;
+  });
+
+  document.getElementById('btn-save-carta').addEventListener('click', () => {
+    const titulo = document.getElementById('f-titulo').value.trim();
+    if (!titulo) { document.getElementById('f-titulo').classList.add('invalid'); return; }
+    const d = {
+      titulo,
+      contenido: document.getElementById('f-contenido').value,
+      empresaId: document.getElementById('f-empresa').value || null,
+      puestoId: document.getElementById('f-puesto').value || null,
+      tags: document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean)
+    };
+    if (isEdit) Store.updateCarta(carta.id, d);
+    else { const nc = Store.addCarta(d); App.selectedId = nc.id; }
+    closeModal(); renderView(); toast(isEdit ? 'Carta actualizada' : 'Carta creada');
+  });
+}
+
+/* ══════════════════════════════════════════════
+   VISTA: DOCUMENTOS
+   ══════════════════════════════════════════════ */
+function renderDocumentos(container) {
+  const tipos = ['CV', 'CartaMotivacional', 'Nota', 'Plantilla'];
+  container.innerHTML = `
+    <div id="list-panel">
+      <div id="list-header">
+        <h2>Documentos</h2>
+        <button class="btn btn-primary btn-sm" id="btn-add-doc"><i class="fa-solid fa-plus"></i> Nuevo</button>
+      </div>
+      <div id="list-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar documento..." id="search-doc"></div>
+      <div class="filter-bar" id="filter-tipos-doc">
+        <span class="filter-chip ${!App.filterTag ? 'active' : ''}" data-tipo="">Todos</span>
+        ${tipos.map(t => `<span class="filter-chip ${App.filterTag === t ? 'active' : ''}" data-tipo="${t}">${t === 'CartaMotivacional' ? 'Carta Motiv.' : t}</span>`).join('')}
+      </div>
+      <div id="list-items"></div>
+    </div>
+    <div id="detail-panel" class="fade-in"></div>
+  `;
+
+  document.getElementById('btn-add-doc').addEventListener('click', () => showDocumentoForm());
+  document.getElementById('search-doc').addEventListener('input', e => { App.searchQuery = e.target.value.toLowerCase(); renderDocumentoList(); });
+  document.getElementById('filter-tipos-doc').querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => { App.filterTag = chip.dataset.tipo || null; renderDocumentos(document.getElementById('content')); });
+  });
+  renderDocumentoList();
+  renderDocumentoDetail();
+}
+
+function renderDocumentoList() {
+  const items = document.getElementById('list-items');
+  if (!items) return;
+  let list = Store.getDocumentos();
+  if (App.searchQuery) list = list.filter(d => d.titulo.toLowerCase().includes(App.searchQuery));
+  if (App.filterTag) list = list.filter(d => d.tipo === App.filterTag);
+
+  items.innerHTML = list.length ? list.map(d => `
+    <div class="list-item ${App.selectedId === d.id ? 'active' : ''}" data-id="${d.id}">
+      <div class="item-title">${esc(d.titulo)}</div>
+      <div class="item-sub"><span class="badge badge-blue" style="font-size:10px;">${d.tipo === 'CartaMotivacional' ? 'Carta Motiv.' : d.tipo}</span> · ${d.fecha?.split('T')[0] || ''}</div>
+    </div>
+  `).join('') : '<div class="empty-state"><i class="fa-solid fa-folder-open"></i><p>No hay documentos</p></div>';
+
+  items.querySelectorAll('.list-item').forEach(el => {
+    el.addEventListener('click', () => { App.selectedId = el.dataset.id; App.editing = false; renderDocumentoList(); renderDocumentoDetail(); });
+  });
+}
+
+function renderDocumentoDetail() {
+  const panel = document.getElementById('detail-panel');
+  if (!panel) return;
+  if (!App.selectedId) { panel.innerHTML = '<div class="empty-state"><i class="fa-solid fa-folder-open"></i><p>Selecciona un documento</p></div>'; return; }
+  const d = Store.getDocumento(App.selectedId);
+  if (!d) { panel.innerHTML = ''; return; }
+
+  // Buscar puestos que usan este documento
+  const puestosUsan = Store.getPuestos().filter(p => p.documentos.includes(d.id) || p.cvId === d.id || p.cartaMotivacionalId === d.id);
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div>
+        <div class="detail-title">${esc(d.titulo)}</div>
+        <div class="detail-sub"><span class="badge badge-blue">${d.tipo === 'CartaMotivacional' ? 'Carta Motivacional' : d.tipo}</span> · ${d.fecha?.split('T')[0] || ''}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" id="btn-edit-doc"><i class="fa-solid fa-pen"></i> Editar</button>
+        <button class="btn btn-danger btn-sm" id="btn-del-doc"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+
+    ${d.tags?.length ? `<div class="tag-list" style="margin-bottom:12px;">${d.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+
+    <div class="card" style="min-height:100px;">
+      <div class="card-header"><h3>Contenido</h3></div>
+      <p style="font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--gray-700);">${esc(d.contenido) || '<em style="color:var(--gray-400);">Sin contenido</em>'}</p>
+    </div>
+
+    ${puestosUsan.length ? `<div class="section-title"><i class="fa-solid fa-briefcase"></i> Usado en puestos</div>
+    <ul class="rel-list">${puestosUsan.map(p => {
+      const e = Store.getEmpresa(p.empresaId);
+      return `<li><div><span class="rel-name">${esc(p.titulo)}</span><br><span class="rel-sub">${e ? esc(e.nombre) : ''}</span></div></li>`;
+    }).join('')}</ul>` : ''}
+  `;
+
+  panel.querySelector('#btn-edit-doc')?.addEventListener('click', () => showDocumentoForm(d));
+  panel.querySelector('#btn-del-doc')?.addEventListener('click', () => confirmDelete('documento', d.id, d.titulo));
+}
+
+/* ── Formulario Documento ── */
+function showDocumentoForm(doc = null) {
+  const isEdit = !!doc;
+  const html = `
+    <div class="form-row">
+      <div class="form-group"><label>Título *</label><input type="text" id="f-titulo" value="${isEdit ? esc(doc.titulo) : ''}"></div>
+      <div class="form-group"><label>Tipo</label><select id="f-tipo">${['CV','CartaMotivacional','Nota','Plantilla'].map(t => `<option value="${t}" ${isEdit && doc.tipo === t ? 'selected' : ''}>${t === 'CartaMotivacional' ? 'Carta Motivacional' : t}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label>Tags (separados por coma)</label><input type="text" id="f-tags" value="${isEdit && doc.tags ? doc.tags.join(', ') : ''}"></div>
+    <div class="form-group"><label>Contenido</label><textarea id="f-contenido" rows="10" style="min-height:180px;">${isEdit ? esc(doc.contenido) : ''}</textarea></div>
+  `;
+  openModal(isEdit ? 'Editar Documento' : 'Nuevo Documento', html, `
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="btn-save-doc">Guardar</button>
+  `);
+  document.getElementById('btn-save-doc').addEventListener('click', () => {
+    const titulo = document.getElementById('f-titulo').value.trim();
+    if (!titulo) { document.getElementById('f-titulo').classList.add('invalid'); return; }
+    const d = { titulo, tipo: document.getElementById('f-tipo').value, contenido: document.getElementById('f-contenido').value, tags: document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean) };
+    if (isEdit) Store.updateDocumento(doc.id, d);
+    else { const nd = Store.addDocumento(d); App.selectedId = nd.id; }
+    closeModal(); renderView(); toast(isEdit ? 'Documento actualizado' : 'Documento creado');
+  });
+}
+
+/* ══════════════════════════════════════════════
+   VISTA: AJUSTES
+   ══════════════════════════════════════════════ */
+function renderAjustes(container) {
+  const d = Store.data;
+  const size = new Blob([JSON.stringify(d)]).size;
+  const sizeStr = size > 1024 ? (size / 1024).toFixed(1) + ' KB' : size + ' B';
+
+  container.innerHTML = `
+    <div id="full-panel" class="fade-in">
+      <div class="card">
+        <div class="card-header"><h3><i class="fa-solid fa-database" style="color:var(--blue-500);margin-right:8px;"></i>Datos en localStorage</h3></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;">
+          <div style="text-align:center;padding:12px;background:var(--blue-50);border-radius:var(--radius-sm);">
+            <div style="font-size:20px;font-weight:800;color:var(--blue-700);">${d.empresas.length}</div>
+            <div style="font-size:12px;color:var(--gray-500);">Empresas</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--blue-50);border-radius:var(--radius-sm);">
+            <div style="font-size:20px;font-weight:800;color:var(--blue-700);">${d.puestos.length}</div>
+            <div style="font-size:12px;color:var(--gray-500);">Puestos</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--blue-50);border-radius:var(--radius-sm);">
+            <div style="font-size:20px;font-weight:800;color:var(--blue-700);">${d.cartas.length}</div>
+            <div style="font-size:12px;color:var(--gray-500);">Cartas</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--blue-50);border-radius:var(--radius-sm);">
+            <div style="font-size:20px;font-weight:800;color:var(--blue-700);">${d.documentos.length}</div>
+            <div style="font-size:12px;color:var(--gray-500);">Documentos</div>
+          </div>
+        </div>
+        <p style="font-size:13px;color:var(--gray-500);">Tamaño en storage: <strong>${sizeStr}</strong></p>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3><i class="fa-solid fa-file-export" style="color:var(--blue-500);margin-right:8px;"></i>Exportar / Importar</h3></div>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">Exporta todos tus datos a un archivo JSON o importa datos desde un archivo previamente exportado.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btn-export"><i class="fa-solid fa-download"></i> Exportar datos</button>
+          <button class="btn btn-secondary" id="btn-import"><i class="fa-solid fa-upload"></i> Importar datos</button>
+          <input type="file" id="file-import" accept=".json" style="display:none;">
+        </div>
+      </div>
+
+      <div class="card" style="border-color:var(--red);">
+        <div class="card-header"><h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--red);margin-right:8px;"></i>Zona de peligro</h3></div>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">Al resetear la aplicación se borrarán todos los datos almacenados. Esta acción no se puede deshacer.</p>
+        <button class="btn btn-danger" id="btn-reset"><i class="fa-solid fa-trash"></i> Resetear aplicación</button>
+      </div>
+    </div>
+  `;
+
+  // Exportar
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const json = Store.exportData();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `jobapp-manager-${today()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Datos exportados correctamente');
+  });
+
+  // Importar
+  document.getElementById('btn-import').addEventListener('click', () => {
+    document.getElementById('file-import').click();
+  });
+  document.getElementById('file-import').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const ok = Store.importData(ev.target.result);
+      if (ok) { App.selectedId = null; renderView(); toast('Datos importados correctamente'); }
+      else { toast('Error al importar: JSON inválido', 'error'); }
+    };
+    reader.readAsText(file);
+  });
+
+  // Reset
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    openModal('Confirmar reset', `
+      <p style="font-size:14px;color:var(--gray-700);">Se borrarán <strong>todos</strong> los datos de la aplicación. Esta acción no se puede deshacer.</p>
+      <p style="font-size:13px;color:var(--gray-500);margin-top:8px;">Se recomienda exportar los datos antes de resetear.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-confirm-reset">Sí, resetear</button>
+      </div>
+    `);
+    document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+      Store.reset();
+      App.selectedId = null;
+      closeModal();
+      renderView();
+      toast('Aplicación reseteada');
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════
+   CONFIRMAR BORRADO
+   ══════════════════════════════════════════════ */
+function confirmDelete(type, id, name, extraId = null) {
+  const msgs = {
+    empresa: `Se borrarán todos los puestos y contactos de "${name}". Las cartas se desasociarán pero no se borrarán.`,
+    puesto: `Se eliminará el puesto "${name}".`,
+    carta: `Se eliminará la carta "${name}".`,
+    documento: `Se eliminará el documento "${name}" y se desasociará de los puestos que lo usen.`,
+    contacto: `Se eliminará el contacto "${name}". Los puestos que lo referencian quedarán sin contacto.`
+  };
+  openModal('Confirmar eliminación', `
+    <p style="font-size:14px;color:var(--gray-700);">${msgs[type]}</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirm-del">Eliminar</button>
+    </div>
+  `);
+  document.getElementById('btn-confirm-del').addEventListener('click', () => {
+    switch (type) {
+      case 'empresa': Store.deleteEmpresa(id); App.selectedId = null; break;
+      case 'puesto': Store.deletePuesto(id); App.selectedId = null; break;
+      case 'carta': Store.deleteCarta(id); App.selectedId = null; break;
+      case 'documento': Store.deleteDocumento(id); App.selectedId = null; break;
+      case 'contacto': Store.deleteContacto(id, extraId); break;
+    }
+    closeModal();
+    renderView();
+    toast('Eliminado correctamente');
+  });
+}
+
+/* ══════════════════════════════════════════════
+   INICIALIZACIÓN
+   ══════════════════════════════════════════════ */
+Store.init();
+renderNav();
+renderView();
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// Cerrar modal clickeando fuera
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+</script>
+</body>
+</html>
