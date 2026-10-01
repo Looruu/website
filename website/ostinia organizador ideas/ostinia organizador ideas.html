@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSTINIA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --bg2: #111;
+      --bg3: #161616;
+      --fg: #d0d0d0;
+      --fg2: #6b6b6b;
+      --fg3: #333;
+      --red: #e02020;
+      --red10: rgba(224,32,32,0.10);
+      --red25: rgba(224,32,32,0.25);
+      --red40: rgba(224,32,32,0.40);
+      --border: #1c1c1c;
+      --border2: #2a2a2a;
+      --r: 2px;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Inter', sans-serif;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* === Scanlines CRT === */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+    }
+
+    /* === Ruido de grano === */
+    body::before {
+      content: '';
+      position: fixed; inset: -50%;
+      z-index: 9998;
+      pointer-events: none;
+      width: 200%; height: 200%;
+      opacity: 0.022;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px;
+      animation: grain 0.4s steps(4) infinite;
+    }
+    @keyframes grain {
+      0% { transform: translate(0,0); }
+      25% { transform: translate(-4px, 3px); }
+      50% { transform: translate(3px, -4px); }
+      75% { transform: translate(-3px, -2px); }
+      100% { transform: translate(4px, 2px); }
+    }
+
+    /* === Línea decorativa lateral === */
+    .app::before {
+      content: '';
+      position: fixed;
+      top: 0; left: calc(50% - 420px);
+      width: 1px; height: 100%;
+      background: linear-gradient(180deg, transparent 5%, var(--red10) 30%, var(--red25) 50%, var(--red10) 70%, transparent 95%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* === Flicker global === */
+    @keyframes flicker {
+      0%, 96%, 100% { opacity: 1; }
+      96.5% { opacity: 0.88; }
+      97% { opacity: 1; }
+      97.5% { opacity: 0.92; }
+    }
+
+    /* === Logo OSTINIA glitch === */
+    .logo-glitch {
+      position: relative;
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      color: var(--fg);
+      user-select: none;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .logo-glitch .ch { display: inline-block; }
+    .logo-glitch .ch.red { color: var(--red); position: relative; }
+
+    .logo-glitch::before,
+    .logo-glitch::after {
+      content: 'OSTINIA';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      letter-spacing: -1.5px;
+      font-weight: 900;
+      font-size: 3.2rem;
+    }
+    .logo-glitch::before {
+      color: var(--red);
+      z-index: -1;
+      animation: g1 4s infinite linear alternate-reverse;
+    }
+    .logo-glitch::after {
+      color: #00e8e8;
+      z-index: -2;
+      opacity: 0.35;
+      animation: g2 3s infinite linear alternate-reverse;
+    }
+    @keyframes g1 {
+      0%, 90%, 100% { clip-path: inset(0); transform: translate(0); }
+      91% { clip-path: inset(15% 0 50% 0); transform: translate(-5px, 1px); }
+      93% { clip-path: inset(55% 0 10% 0); transform: translate(4px, -1px); }
+      95% { clip-path: inset(35% 0 35% 0); transform: translate(-3px, 0); }
+      97% { clip-path: inset(70% 0 5% 0); transform: translate(2px, 1px); }
+    }
+    @keyframes g2 {
+      0%, 87%, 100% { clip-path: inset(0); transform: translate(0); }
+      88% { clip-path: inset(45% 0 25% 0); transform: translate(4px, 1px); }
+      90% { clip-path: inset(8% 0 65% 0); transform: translate(-4px, 0); }
+      92% { clip-path: inset(65% 0 8% 0); transform: translate(3px, -1px); }
+      94% { clip-path: inset(25% 0 45% 0); transform: translate(-2px, 1px); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* === Layout === */
+    .app {
+      position: relative; z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 24px;
+      animation: flicker 7s infinite;
+    }
+
+    /* === Header === */
+    header {
+      padding: 52px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .brand p {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      color: var(--fg2);
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+    }
+    .brand p span { color: var(--red); }
+
+    .hdr-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* === Botones === */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 13px 22px;
+      border: none;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+    }
+    .btn i { font-size: 0.6rem; }
+    .btn-red {
+      background: var(--red);
+      color: #fff;
+    }
+    .btn-red::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.5s;
+    }
+    .btn-red:hover::before { left: 100%; }
+    .btn-red:hover { box-shadow: 0 0 30px var(--red25), 0 0 60px rgba(224,32,32,0.08); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--fg2); color: var(--fg); }
+    .btn-ghost:hover .btn-shine {
+      transform: translateX(100%);
+    }
+    .btn-shine {
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      transition: transform 0.6s;
+      pointer-events: none;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    /* === Toolbar === */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .ftabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    .ft {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 9px 16px;
+      border: none;
+      background: transparent;
+      color: var(--fg2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ft:not(:last-child) { border-right: 1px solid var(--border); }
+    .ft.on { background: var(--red); color: #fff; }
+    .ft:hover:not(.on) { color: var(--fg); background: var(--bg2); }
+
+    .sbox {
+      flex: 1; min-width: 140px;
+      position: relative;
+    }
+    .sbox i {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--fg3);
+      font-size: 0.68rem;
+      pointer-events: none;
+    }
+    .sbox input {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      padding: 9px 12px 9px 34px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--fg);
+      outline: none;
+      transition: all 0.25s;
+    }
+    .sbox input::placeholder { color: var(--fg3); }
+    .sbox input:focus { border-color: var(--red); box-shadow: 0 0 0 1px var(--red10); }
+
+    .cnt {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--fg3);
+      margin-left: auto;
+    }
+
+    /* === Entradas === */
+    .elist { display: flex; flex-direction: column; }
+
+    .ent {
+      position: relative;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 16px;
+      align-items: start;
+      transition: all 0.3s;
+      animation: sUp 0.4s ease backwards;
+    }
+    .ent:last-child { border-bottom: none; }
+    .ent:hover {
+      background: var(--bg3);
+      padding-left: 14px; padding-right: 14px;
+      margin-left: -14px; margin-right: -14px;
+      border-radius: var(--r);
+    }
+    .ent:hover .et { animation: mGlitch 0.25s ease; }
+
+    @keyframes sUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes mGlitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-1px, 1px); }
+      40% { transform: translate(1px, -1px); }
+      60% { transform: translate(-1px, 0); }
+      100% { transform: translate(0); }
+    }
+
+    .ei {
+      width: 34px; height: 34px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.64rem;
+      color: var(--fg2);
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition: all 0.3s;
+    }
+    .ent:hover .ei {
+      border-color: var(--red);
+      color: var(--red);
+      box-shadow: 0 0 14px var(--red10);
+    }
+    .ent[data-t="note"] .ei { border-style: dashed; }
+
+    .eb { min-width: 0; }
+
+    .el {
+      font-family: var(--mono);
+      font-size: 0.56rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--fg3);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .el::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      max-width: 50px;
+    }
+
+    .et {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--fg);
+      line-height: 1.35;
+      margin-bottom: 2px;
+      word-break: break-word;
+    }
+    .ent[data-t="link"] .et {
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .ent[data-t="link"] .et:hover { color: var(--red); }
+
+    .eu {
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      color: var(--fg2);
+      word-break: break-all;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+    .eu::before { content: '>'; color: var(--red); margin-right: 4px; }
+
+    .ed {
+      font-size: 0.8rem;
+      color: var(--fg2);
+      line-height: 1.6;
+      font-weight: 300;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .edt {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--fg3);
+      margin-top: 8px;
+    }
+    .edt::before { content: '['; color: var(--red); }
+    .edt::after { content: ']'; color: var(--red); }
+
+    /* Confirmación inline */
+    .cf {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      padding: 11px 14px;
+      background: var(--red10);
+      border-left: 2px solid var(--red);
+      animation: sUp 0.2s ease;
+    }
+    .cf.show { display: flex; }
+    .cf span {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--red);
+    }
+    .cf button {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border: none;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cf-y { background: var(--red); color: #fff; }
+    .cf-y:hover { box-shadow: 0 0 16px var(--red25); }
+    .cf-n { background: transparent; color: var(--fg2); border: 1px solid var(--border) !important; }
+    .cf-n:hover { border-color: var(--fg2) !important; color: var(--fg); }
+
+    /* Acciones */
+    .ea {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      opacity: 0;
+      transition: all 0.25s;
+      flex-shrink: 0;
+    }
+    .ent:hover .ea { opacity: 1; }
+    .eab {
+      width: 30px; height: 30px;
+      border: 1px solid transparent;
+      border-radius: var(--r);
+      background: transparent;
+      color: var(--fg3);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem;
+      transition: all 0.2s;
+    }
+    .eab:hover { border-color: var(--border); color: var(--fg2); }
+    .eab.dl:hover { border-color: var(--red); color: var(--red); background: var(--red10); }
+
+    /* === Vacío === */
+    .empty {
+      text-align: center;
+      padding: 90px 20px;
+      animation: sUp 0.5s ease;
+    }
+    .empty-ln {
+      width: 40px; height: 1px;
+      background: var(--border);
+      margin: 0 auto 28px;
+    }
+    .empty h2 {
+      font-family: var(--sans);
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--fg2);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .empty p {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--fg3);
+      line-height: 1.7;
+    }
+    .cur {
+      display: inline-block;
+      width: 7px; height: 13px;
+      background: var(--red);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+
+    /* === Modal === */
+    .ov {
+      position: fixed; inset: 0;
+      z-index: 500;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(14px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; visibility: hidden;
+      transition: all 0.35s;
+    }
+    .ov.open { opacity: 1; visibility: visible; }
+
+    .md {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      width: 100%; max-width: 500px;
+      position: relative;
+      transform: translateY(14px);
+      transition: transform 0.35s ease;
+    }
+    .ov.open .md { transform: translateY(0); }
+    .md::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--red);
+      box-shadow: 0 0 24px var(--red25);
+    }
+
+    .mdh {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 26px 26px 0;
+    }
+    .mdh h2 {
+      font-family: var(--sans);
+      font-size: 1.05rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .mdh h2 span { color: var(--red); }
+    .mdx {
+      width: 28px; height: 28px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: transparent;
+      color: var(--fg2);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem;
+      transition: all 0.2s;
+    }
+    .mdx:hover { border-color: var(--red); color: var(--red); }
+
+    .mdb { padding: 26px; }
+
+    .ttog {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .to {
+      flex: 1;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 11px 12px;
+      border: none;
+      background: transparent;
+      color: var(--fg2);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .to:not(:last-child) { border-right: 1px solid var(--border); }
+    .to.on { background: var(--red); color: #fff; }
+    .to:hover:not(.on) { color: var(--fg); }
+    .to i { font-size: 0.58rem; }
+
+    .fl { margin-bottom: 18px; }
+    .fl:last-child { margin-bottom: 0; }
+    .fl label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--fg2);
+      margin-bottom: 7px;
+    }
+    .fl label .op {
+      font-weight: 300;
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0.5;
+    }
+    .fl input,
+    .fl textarea {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      padding: 11px 13px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--fg);
+      outline: none;
+      transition: all 0.25s;
+      resize: vertical;
+    }
+    .fl input::placeholder,
+    .fl textarea::placeholder { color: var(--fg3); }
+    .fl input:focus,
+    .fl textarea:focus { border-color: var(--red); box-shadow: 0 0 0 1px var(--red10); }
+    .fl textarea { min-height: 100px; line-height: 1.7; }
+
+    .fle {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--red);
+      margin-top: 5px;
+      display: none;
+    }
+    .fle::before { content: 'ERR: '; }
+    .fl.er input,
+    .fl.er textarea { border-color: var(--red); }
+    .fl.er .fle { display: block; }
+
+    .mdf {
+      padding: 0 26px 26px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .mhint {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--fg3);
+      margin-top: 5px;
+      text-align: right;
+    }
+    .mhint kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-size: 0.55rem;
+      background: var(--bg);
+      color: var(--fg2);
+    }
+
+    /* === Toast === */
+    .tz {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 600;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 8px;
+    }
+    .tt {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.4px;
+      background: var(--fg);
+      color: var(--bg);
+      padding: 10px 20px;
+      border-radius: var(--r);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      display: flex; align-items: center; gap: 9px;
+      animation: tI 0.3s ease, tO 0.3s ease 2.2s forwards;
+      white-space: nowrap;
+    }
+    .tt .tr { color: var(--red); font-weight: 700; }
+    @keyframes tI { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes tO { from { opacity: 1; } to { opacity: 0; transform: translateY(10px); } }
+
+    /* === Footer === */
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+    footer p {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--fg3);
+      letter-spacing: 0.3px;
+    }
+    footer p span { color: var(--red); }
+
+    /* === Input file oculto === */
+    #importFile { display: none; }
+
+    /* === Responsive === */
+    @media (max-width: 840px) { .app::before { display: none; } }
+    @media (max-width: 640px) {
+      .app { padding: 0 14px; }
+      header { padding: 36px 0 28px; margin-bottom: 28px; }
+      .logo-glitch, .logo-glitch::before, .logo-glitch::after { font-size: 2.2rem; letter-spacing: -1px; }
+      .hdr-actions { width: 100%; }
+      .hdr-actions .btn { flex: 1; justify-content: center; padding: 11px 12px; font-size: 0.6rem; }
+      .ent { grid-template-columns: 28px 1px; gap: 10px; padding: 16px 0; }
+      .ei { width: 28px; height: 28px; font-size: 0.56rem; }
+      .ea {
+        opacity: 1;
+        position: absolute;
+        top: 16px; right: 0;
+        flex-direction: row;
+      }
+      .mdh, .mdb, .mdf { padding-left: 18px; padding-right: 18px; }
+      .toolbar { gap: 6px; }
+      .ft { padding: 8px 12px; font-size: 0.6rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo-glitch" data-text="OSTINIA">
+          <span class="ch">O</span><span class="ch">S</span><span class="ch">T</span><span class="ch">I</span><span class="ch">N</span><span class="ch red">I</span><span class="ch">A</span>
+        </div>
+        <p>datos almacenados <span>localmente</span></p>
+      </div>
+      <div class="hdr-actions">
+        <button class="btn btn-ghost" id="btnImport" aria-label="Importar JSON">
+          <span class="btn-shine"></span>
+          <i class="fa-solid fa-file-import"></i> Importar
+        </button>
+        <button class="btn btn-ghost" id="btnExport" aria-label="Exportar JSON">
+          <span class="btn-shine"></span>
+          <i class="fa-solid fa-file-export"></i> Exportar
+        </button>
+        <button class="btn btn-red" id="btnOpen" aria-label="Nuevo elemento">
+          <i class="fa-solid fa-plus"></i> Nuevo
+        </button>
+      </div>
+      <input type="file" id="importFile" accept=".json">
+    </header>
+
+    <nav class="toolbar" aria-label="Filtros">
+      <div class="ftabs" role="tablist">
+        <button class="ft on" data-f="all" role="tab" aria-selected="true">Todo</button>
+        <button class="ft" data-f="link" role="tab" aria-selected="false">Links</button>
+        <button class="ft" data-f="note" role="tab" aria-selected="false">Notas</button>
+      </div>
+      <div class="sbox">
+        <input type="text" id="sInput" placeholder="buscar..." aria-label="Buscar">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <span class="cnt" id="cnt"></span>
+    </nav>
+
+    <main class="elist" id="list" aria-live="polite"></main>
+
+    <footer>
+      <p>ostinia::vault <span>//</span> local · sin servidor · sin telemetria</p>
+    </footer>
+  </div>
+
+  <!-- Modal crear -->
+  <div class="ov" id="ov" role="dialog" aria-modal="true" aria-labelledby="mT">
+    <div class="md">
+      <div class="mdh">
+        <h2 id="mT">Nuevo <span>_</span></h2>
+        <button class="mdx" id="btnClose" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="mdb">
+        <div class="ttog" role="radiogroup" aria-label="Tipo">
+          <button class="to on" data-t="link" role="radio" aria-checked="true">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Link
+          </button>
+          <button class="to" data-t="note" role="radio" aria-checked="false">
+            <i class="fa-regular fa-note-sticky"></i> Nota
+          </button>
+        </div>
+        <div id="fL">
+          <div class="fl" id="fU">
+            <label for="iU">URL</label>
+            <input type="url" id="iU" placeholder="https://ejemplo.com">
+            <div class="fle">URL no valida</div>
+          </div>
+          <div class="fl">
+            <label for="iLT">Titulo <span class="op">— opcional</span></label>
+            <input type="text" id="iLT" placeholder="nombre descriptivo">
+          </div>
+        </div>
+        <div id="fN" style="display:none">
+          <div class="fl" id="fNT">
+            <label for="iNT">Titulo</label>
+            <input type="text" id="iNT" placeholder="resumen breve">
+            <div class="fle">titulo requerido</div>
+          </div>
+          <div class="fl" id="fNC">
+            <label for="iNC">Contenido</label>
+            <textarea id="iNC" placeholder="escribe aqui..."></textarea>
+            <div class="fle">contenido requerido</div>
+          </div>
+        </div>
+        <div class="mhint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> guardar</div>
+      </div>
+      <div class="mdf">
+        <button class="btn btn-ghost" id="btnCancel" style="padding:10px 20px;">Cancelar</button>
+        <button class="btn btn-red" id="btnSave" style="padding:10px 28px;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tz" id="toasts" aria-live="assertive"></div>
+
+  <script>
+    /* ================================================================
+       Estado y persistencia
+    ================================================================ */
+    const K = 'ostinia_vault_data';
+    let items = (() => {
+      try { return JSON.parse(localStorage.getItem(K)) || []; }
+      catch { return []; }
+    })();
+    const save = () => localStorage.setItem(K, JSON.stringify(items));
+    let filt = 'all', q = '', selT = 'link';
+
+    /* ================================================================
+       Referencias DOM
+    ================================================================ */
+    const $l = document.getElementById('list');
+    const $c = document.getElementById('cnt');
+    const $s = document.getElementById('sInput');
+    const $ov = document.getElementById('ov');
+    const $ts = document.getElementById('toasts');
+    const $fLk = document.getElementById('fL');
+    const $fNt = document.getElementById('fN');
+    const $iU = document.getElementById('iU');
+    const $iLT = document.getElementById('iLT');
+    const $iNT = document.getElementById('iNT');
+    const $iNC = document.getElementById('iNC');
+    const $fU = document.getElementById('fU');
+    const $fNT = document.getElementById('fNT');
+    const $fNC = document.getElementById('fNC');
+    const $tOpts = document.querySelectorAll('.to');
+    const $fTabs = document.querySelectorAll('.ft');
+    const $importFile = document.getElementById('importFile');
+
+    /* ================================================================
+       Helpers
+    ================================================================ */
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const esc = s => { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; };
+
+    function ago(ts) {
+      const m = Math.floor((Date.now() - ts) / 60000);
+      if (m < 1) return 'ahora';
+      if (m < 60) return `${m}m`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h}h`;
+      const d = Math.floor(h / 24);
+      if (d < 30) return `${d}d`;
+      return new Date(ts).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    }
+
+    function vUrl(s) {
+      try { const u = new URL(s); return u.protocol === 'http:' || u.protocol === 'https:'; }
+      catch { return false; }
+    }
+    function dm(url) {
+      try { return new URL(url).hostname.replace(/^www\./, ''); }
+      catch { return url; }
+    }
+
+    /* ================================================================
+       Toast
+    ================================================================ */
+    function toast(msg, err = false) {
+      const el = document.createElement('div');
+      el.className = 'tt';
+      el.innerHTML = err
+        ? `<span class="tr">//</span> ${esc(msg)}`
+        : `<span class="tr">></span> ${esc(msg)}`;
+      $ts.appendChild(el);
+      setTimeout(() => el.remove(), 2600);
+    }
+
+    /* ================================================================
+       Render
+    ================================================================ */
+    function filtered() {
+      return items
+        .filter(i => filt === 'all' || i.type === filt)
+        .filter(i => {
+          if (!q) return true;
+          const s = q.toLowerCase();
+          return (i.title || '').toLowerCase().includes(s) ||
+                 (i.url || '').toLowerCase().includes(s) ||
+                 (i.content || '').toLowerCase().includes(s);
+        })
+        .sort((a, b) => b.ts - a.ts);
+    }
+
+    function render() {
+      const list = filtered();
+      $c.textContent = `${list.length} item${list.length !== 1 ? 's' : ''}`;
+
+      if (!list.length) {
+        $l.innerHTML = `
+          <div class="empty">
+            <div class="empty-ln"></div>
+            <h2>${q ? 'Sin resultados' : 'Vacio'}</h2>
+            <p>${q ? 'sin coincidencias' : `esperando entrada<span class="cur"></span>`}</p>
+          </div>`;
+        return;
+      }
+
+      $l.innerHTML = list.map((it, i) => {
+        const d = Math.min(i * 0.04, 0.4);
+        if (it.type === 'link') {
+          const t = it.title || dm(it.url);
+          return `
+          <article class="ent" data-t="link" data-id="${it.id}" style="animation-delay:${d}s">
+            <div class="ei"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+            <div class="eb">
+              <div class="el">Link</div>
+              <a class="et" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(t)}</a>
+              <div class="eu">${esc(it.url)}</div>
+              <div class="edt">${ago(it.ts)}</div>
+              <div class="cf" id="cf-${it.id}">
+                <span>eliminar?</span>
+                <button class="cf-y" data-del="${it.id}">Eliminar</button>
+                <button class="cf-n" data-cfc="${it.id}">No</button>
+              </div>
+            </div>
+            <div class="ea">
+              <button class="eab" data-cp="${esc(it.url)}" title="Copiar" aria-label="Copiar URL"><i class="fa-regular fa-copy"></i></button>
+              <button class="eab dl" data-rd="${it.id}" title="Borrar" aria-label="Borrar"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </article>`;
+        }
+        return `
+          <article class="ent" data-t="note" data-id="${it.id}" style="animation-delay:${d}s">
+            <div class="ei"><i class="fa-regular fa-note-sticky"></i></div>
+            <div class="eb">
+              <div class="el">Nota</div>
+              <div class="et">${esc(it.title)}</div>
+              <div class="ed">${esc(it.content)}</div>
+              <div class="edt">${ago(it.ts)}</div>
+              <div class="cf" id="cf-${it.id}">
+                <span>eliminar?</span>
+                <button class="cf-y" data-del="${it.id}">Eliminar</button>
+                <button class="cf-n" data-cfc="${it.id}">No</button>
+              </div>
+            </div>
+            <div class="ea">
+              <button class="eab dl" data-rd="${it.id}" title="Borrar" aria-label="Borrar"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    /* ================================================================
+       Eventos delegados en la lista
+    ================================================================ */
+    $l.addEventListener('click', e => {
+      const rd = e.target.closest('[data-rd]');
+      if (rd) {
+        document.querySelectorAll('.cf.show').forEach(el => el.classList.remove('show'));
+        const cf = document.getElementById('cf-' + rd.dataset.rd);
+        if (cf) cf.classList.add('show');
+        return;
+      }
+      const dl = e.target.closest('[data-del]');
+      if (dl) {
+        items = items.filter(i => i.id !== dl.dataset.del);
+        save(); render(); toast('eliminado', true);
+        return;
+      }
+      const cfc = e.target.closest('[data-cfc]');
+      if (cfc) {
+        const cf = document.getElementById('cf-' + cfc.dataset.cfc);
+        if (cf) cf.classList.remove('show');
+        return;
+      }
+      const cp = e.target.closest('[data-cp]');
+      if (cp) {
+        navigator.clipboard.writeText(cp.dataset.cp)
+          .then(() => toast('URL copiada'))
+          .catch(() => toast('error al copiar', true));
+      }
+    });
+
+    /* ================================================================
+       Modal
+    ================================================================ */
+    function openM() {
+      resetM();
+      $ov.classList.add('open');
+      setTimeout(() => (selT === 'link' ? $iU : $iNT).focus(), 180);
+    }
+    function closeM() { $ov.classList.remove('open'); }
+    function resetM() {
+      selT = 'link'; syncT();
+      $iU.value = ''; $iLT.value = ''; $iNT.value = ''; $iNC.value = '';
+      clrErr();
+    }
+    function clrErr() { [$fU, $fNT, $fNC].forEach(f => f.classList.remove('er')); }
+    function syncT() {
+      $tOpts.forEach(o => {
+        o.classList.toggle('on', o.dataset.t === selT);
+        o.setAttribute('aria-checked', o.dataset.t === selT);
+      });
+      $fLk.style.display = selT === 'link' ? 'block' : 'none';
+      $fNt.style.display = selT === 'note' ? 'block' : 'none';
+    }
+
+    function doSave() {
+      clrErr();
+      let ok = true;
+      if (selT === 'link') {
+        let url = $iU.value.trim();
+        if (url && !/^https?:\/\//i.test(url)) { url = 'https://' + url; $iU.value = url; }
+        if (!vUrl(url)) { $fU.classList.add('er'); ok = false; }
+        if (ok) {
+          items.push({ id: uid(), type: 'link', url, title: $iLT.value.trim(), ts: Date.now() });
+          save(); closeM(); render(); toast('link guardado');
+        }
+      } else {
+        const t = $iNT.value.trim(), c = $iNC.value.trim();
+        if (!t) { $fNT.classList.add('er'); ok = false; }
+        if (!c) { $fNC.classList.add('er'); ok = false; }
+        if (ok) {
+          items.push({ id: uid(), type: 'note', title: t, content: c, ts: Date.now() });
+          save(); closeM(); render(); toast('nota guardada');
+        }
+      }
+    }
+
+    document.getElementById('btnOpen').addEventListener('click', openM);
+    document.getElementById('btnClose').addEventListener('click', closeM);
+    document.getElementById('btnCancel').addEventListener('click', closeM);
+    document.getElementById('btnSave').addEventListener('click', doSave);
+    $ov.addEventListener('click', e => { if (e.target === $ov) closeM(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && $ov.classList.contains('open')) closeM();
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && $ov.classList.contains('open')) {
+        e.preventDefault(); doSave();
+      }
+    });
+
+    $tOpts.forEach(o => o.addEventListener('click', () => {
+      selT = o.dataset.t; syncT(); clrErr();
+      setTimeout(() => (selT === 'link' ? $iU : $iNT).focus(), 60);
+    }));
+
+    $iU.addEventListener('input', () => $fU.classList.remove('er'));
+    $iNT.addEventListener('input', () => $fNT.classList.remove('er'));
+    $iNC.addEventListener('input', () => $fNC.classList.remove('er'));
+
+    /* ================================================================
+       Filtros y búsqueda
+    ================================================================ */
+    $fTabs.forEach(t => t.addEventListener('click', () => {
+      $fTabs.forEach(b => { b.classList.remove('on'); b.setAttribute('aria-selected', 'false'); });
+      t.classList.add('on'); t.setAttribute('aria-selected', 'true');
+      filt = t.dataset.f; render();
+    }));
+
+    let st;
+    $s.addEventListener('input', () => {
+      clearTimeout(st);
+      st = setTimeout(() => { q = $s.value.trim(); render(); }, 180);
+    });
+
+    /* ================================================================
+       Exportar JSON
+    ================================================================ */
+    document.getElementById('btnExport').addEventListener('click', () => {
+      if (!items.length) {
+        toast('nada que exportar', true);
+        return;
+      }
+      const data = JSON.stringify(items, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      /* Nombre con fecha para no sobreescribir */
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+      a.download = `ostinia_backup_${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast(`exportados ${items.length} items`);
+    });
+
+    /* ================================================================
+       Importar JSON
+    ================================================================ */
+    document.getElementById('btnImport').addEventListener('click', () => {
+      $importFile.click();
+    });
+
+    $importFile.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.json')) {
+        toast('solo archivos .json', true);
+        $importFile.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+
+          /* Validar que sea un array con estructura correcta */
+          if (!Array.isArray(data)) throw new Error('no es un array');
+
+          const valid = data.filter(i =>
+            i && typeof i === 'object' &&
+            (i.type === 'link' || i.type === 'note') &&
+            typeof i.ts === 'number'
+          );
+
+          if (!valid.length) {
+            toast('archivo sin datos validos', true);
+            return;
+          }
+
+          /* Asignar nuevos IDs para evitar conflictos */
+          valid.forEach(i => { i.id = uid(); });
+
+          /* Preguntar: reemplazar o fusionar */
+          if (items.length > 0) {
+            showImportChoice(valid);
+          } else {
+            items = valid;
+            save(); render();
+            toast(`importados ${valid.length} items`);
+          }
+        } catch {
+          toast('error al leer archivo', true);
+        }
+        $importFile.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    /* Modal de elección: reemplazar o fusionar */
+    function showImportChoice(data) {
+      /* Crear modal inline */
+      const existing = document.getElementById('importChoice');
+      if (existing) existing.remove();
+
+      const div = document.createElement('div');
+      div.id = 'importChoice';
+      div.style.cssText = `
+        position: fixed; inset: 0; z-index: 600;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(12px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px;
+        animation: tI 0.3s ease;
+      `;
+      div.innerHTML = `
+        <div style="
+          background: var(--bg3);
+          border: 1px solid var(--border);
+          border-radius: var(--r);
+          max-width: 400px; width: 100%;
+          position: relative;
+          overflow: hidden;
+        ">
+          <div style="height:2px;background:var(--red);box-shadow:0 0 20px var(--red25);"></div>
+          <div style="padding:28px;">
+            <div style="font-family:var(--mono);font-size:0.58rem;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-bottom:6px;">importar</div>
+            <div style="font-family:var(--sans);font-size:1.1rem;font-weight:700;color:var(--fg);margin-bottom:6px;">
+              ${data.length} elemento${data.length > 1 ? 's' : ''} detectado${data.length > 1 ? 's' : ''}
+            </div>
+            <div style="font-family:var(--mono);font-size:0.72rem;color:var(--fg2);margin-bottom:28px;line-height:1.6;">
+              Ya tienes ${items.length} elemento${items.length > 1 ? 's' : ''} guardado${items.length > 1 ? 's' : ''}.
+              <span style="color:var(--red);">Como quieres proceder?</span>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+              <button class="btn btn-ghost" id="icCancel" style="padding:10px 18px;">Cancelar</button>
+              <button class="btn btn-ghost" id="icMerge" style="padding:10px 18px;">
+                <i class="fa-solid fa-code-merge" style="font-size:0.58rem;"></i> Fusionar
+              </button>
+              <button class="btn btn-red" id="icReplace" style="padding:10px 18px;">
+                <i class="fa-solid fa-rotate" style="font-size:0.58rem;"></i> Reemplazar
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(div);
+
+      /* Cerrar con clic fuera o Escape */
+      div.addEventListener('click', e => { if (e.target === div) div.remove(); });
+      const escHandler = ev => {
+        if (ev.key === 'Escape') { div.remove(); document.removeEventListener('keydown', escHandler); }
+      };
+      document.addEventListener('keydown', escHandler);
+
+      document.getElementById('icCancel').addEventListener('click', () => {
+        div.remove(); document.removeEventListener('keydown', escHandler);
+      });
+      document.getElementById('icMerge').addEventListener('click', () => {
+        items = [...items, ...data].sort((a, b) => b.ts - a.ts);
+        save(); render();
+        toast(`fusionados ${data.length} items`);
+        div.remove(); document.removeEventListener('keydown', escHandler);
+      });
+      document.getElementById('icReplace').addEventListener('click', () => {
+        items = data.sort((a, b) => b.ts - a.ts);
+        save(); render();
+        toast(`reemplazado: ${data.length} items`);
+        div.remove(); document.removeEventListener('keydown', escHandler);
+      });
+    }
+
+    /* ================================================================
+       Inicio
+    ================================================================ */
+    render();
+  </script>
+</body>
+</html>
